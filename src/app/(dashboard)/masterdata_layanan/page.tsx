@@ -1,11 +1,11 @@
 "use client";
 
 import React from 'react';
-import { 
-  Plus, Search, Edit2, Trash2, 
-  ChevronLeft, ChevronRight, ChevronsRight, ChevronDown 
+import {
+  Plus, Search, Edit2, Trash2,
+  ChevronLeft, ChevronRight, ChevronsRight, ChevronDown
 } from 'lucide-react';
-import MasterDataNav from '../components/MasterDataNav'; // Import Navigasi Baru
+import MasterDataNav from '../../components/MasterDataNav'; // Import Navigasi Baru
 
 export default function MasterDataPage() {
   const services = [
@@ -17,28 +17,28 @@ export default function MasterDataPage() {
 
   return (
     <div className="w-full pt-10">
-      
+
       {/* Gunakan Komponen Navigasi yang Baru */}
       <MasterDataNav />
 
       {/* Main Card Tabel - Ditambah mt-8 biar turun */}
       <div className="mt-25 bg-white rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden">
-        
+
         {/* Header Tabel */}
         <div className="p-6 flex justify-between items-center bg-white border-b border-slate-100">
           <h3 className="text-2xl font-black text-[#1e3a5f]">Daftar Layanan</h3>
-          
+
           <div className="flex items-center gap-4">
             <button className="flex items-center gap-2 bg-[#123b6b] hover:bg-[#0c284a] text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors">
               <Plus size={18} />
               Tambah Layanan Baru
             </button>
-            
+
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="text" 
-                placeholder="Cari Layanan..." 
+              <input
+                type="text"
+                placeholder="Cari Layanan..."
                 className="pl-10 pr-4 py-2 border-2 border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#4FD1D9] w-64 text-[#1e3a5f]"
               />
             </div>

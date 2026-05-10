@@ -1,11 +1,9 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Image from 'next/image';
-import Sidebar from "./components/Sidebar";
 
 export const metadata: Metadata = {
-  title: "WishWash - Dashboard",
+  title: "WishWash",
   description: "Laundry Management System",
 };
 
@@ -16,24 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="flex min-h-screen bg-slate-50 font-sans">
-        {/* Panggil Sidebar yang sudah interaktif */}
-        <Sidebar />
-
-        <main className="flex-1 p-10 overflow-y-auto">
-          {children}
-        </main>
+      <body className="bg-white font-sans text-black m-0 p-0 antialiased">
+        {/* Children di sini akan berisi layout (auth) atau (dashboard) */}
+        {children}
       </body>
     </html>
   );
 }
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
