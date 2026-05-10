@@ -5,7 +5,7 @@ import {
   Plus, Search, Edit2, Trash2,
   ChevronLeft, ChevronRight, ChevronsRight, ChevronDown
 } from 'lucide-react';
-import MasterDataNav from '../../components/MasterDataNav'; // Import Navigasi Baru
+// Import MasterDataNav SUDAH DIHAPUS DARI SINI 🧹
 
 export default function MasterDataPage() {
   const services = [
@@ -16,13 +16,10 @@ export default function MasterDataPage() {
   ];
 
   return (
-    <div className="w-full pt-10">
+    <div className="w-full">
 
-      {/* Gunakan Komponen Navigasi yang Baru */}
-      <MasterDataNav />
-
-      {/* Main Card Tabel - Ditambah mt-8 biar turun */}
-      <div className="mt-25 bg-white rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden">
+      {/* Main Card Tabel */}
+      <div className="bg-white rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden">
 
         {/* Header Tabel */}
         <div className="p-6 flex justify-between items-center bg-white border-b border-slate-100">
@@ -45,7 +42,7 @@ export default function MasterDataPage() {
           </div>
         </div>
 
-        {/* Tabel (Kodenya tetap sama seperti yang kamu berikan) */}
+        {/* Tabel */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-center text-[#1e3a5f]">
             <thead className="bg-[#e2e8f0] text-sm font-bold text-[#1e3a5f]">

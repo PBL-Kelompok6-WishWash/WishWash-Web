@@ -1,7 +1,19 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import { Camera, Pencil } from 'lucide-react';
 
 export default function PengaturanPage() {
+  const [username, setUsername] = useState("Admin");
+
+  // Ambil nama dari penyimpanan saat halaman dimuat
+  useEffect(() => {
+    const savedName = localStorage.getItem("remembered_username");
+    if (savedName) {
+      setUsername(savedName);
+    }
+  }, []);
+
   return (
     <div className="w-full">
       {/* Judul Halaman */}
@@ -15,10 +27,10 @@ export default function PengaturanPage() {
         {/* Bagian Profil */}
         <div className="flex flex-col items-center mb-12">
           <div className="relative">
-            {/* Foto Profil Besar */}
-            <div className="w-48 h-48 rounded-full border-4 border-[#1e3a5f] overflow-hidden shadow-lg">
+            {/* Foto Profil Besar (Dinamis mengikuti nama) */}
+            <div className="w-48 h-48 rounded-full border-4 border-[#1e3a5f] overflow-hidden shadow-lg bg-slate-100">
               <img 
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mahesa" 
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`} 
                 alt="Profile" 
                 className="w-full h-full object-cover"
               />
@@ -32,7 +44,7 @@ export default function PengaturanPage() {
           {/* Nama & Role */}
           <div className="mt-6 text-center">
             <div className="flex items-center justify-center gap-2">
-              <h3 className="text-3xl font-black text-[#1e3a5f]">Admin Mahesa</h3>
+              <h3 className="text-3xl font-black text-[#1e3a5f] capitalize">{username}</h3>
               <button className="text-[#1e3a5f] hover:text-[#4FD1D9]">
                 <Pencil size={24} />
               </button>
@@ -48,8 +60,8 @@ export default function PengaturanPage() {
             <label className="block text-lg font-bold text-[#1e3a5f]">Nama Lengkap</label>
             <input 
               type="text" 
-              defaultValue="Mahesa Keonho Ganteng"
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium"
+              defaultValue={username} // Menampilkan nama asli
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium capitalize"
             />
           </div>
 
@@ -67,7 +79,7 @@ export default function PengaturanPage() {
             <label className="block text-lg font-bold text-[#1e3a5f]">Email</label>
             <input 
               type="email" 
-              defaultValue="mhskeonho@gmail.com"
+              defaultValue={`${username.toLowerCase()}@wishwash.com`} // Email dummy dinamis
               className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium"
             />
           </div>
