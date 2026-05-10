@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard, ClipboardList, Database, Users, 
-  LogOut, ChevronDown, ChevronRight, Menu,
+import {
+  LayoutDashboard, ClipboardList, Database, Users,
+  LogOut, ChevronDown, ChevronRight, Menu, X,
   Droplets, Tag, CreditCard, Gift, UserCircle, Briefcase
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -13,13 +13,13 @@ import Image from 'next/image';
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  
-  // State untuk dropdown
+
   const [isMasterDataOpen, setIsMasterDataOpen] = useState(false);
   const [isManajemenOpen, setIsManajemenOpen] = useState(false);
-  
-  // State untuk Collapse (menyembunyikan) Sidebar - Nanti bisa kita hubungkan ke Global State kalau mau
-  const [isCollapsed, setIsCollapsed] = useState(false); 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // 💡 State untuk Modal Konfirmasi Logout
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (['/layanan', '/parfum', '/metode_bayar', '/promo'].some(path => pathname.startsWith(path))) {
@@ -30,18 +30,25 @@ export default function Sidebar() {
     }
   }, [pathname]);
 
-  const handleLogout = () => {
+  // 💡 Fungsi memicu modal
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  // 💡 Fungsi eksekusi logout asli
+  const executeLogout = () => {
     localStorage.removeItem("jwt_token");
     localStorage.removeItem("id_role");
+    localStorage.removeItem("nama_user");
     router.replace("/auth");
   };
 
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
     { name: 'Data Transaksi', icon: <ClipboardList size={20} />, path: '/datatransaksi' },
-    { 
-      name: 'Master Data', 
-      icon: <Database size={20} />, 
+    {
+      name: 'Master Data',
+      icon: <Database size={20} />,
       subItems: [
         { name: 'Layanan', path: '/layanan', icon: <Droplets size={16} /> },
         { name: 'Parfum', path: '/parfum', icon: <Tag size={16} /> },
@@ -49,9 +56,9 @@ export default function Sidebar() {
         { name: 'Promo', path: '/promo', icon: <Gift size={16} /> },
       ]
     },
-    { 
-      name: 'Manaj. Pengguna', 
-      icon: <Users size={20} />, 
+    {
+      name: 'Manaj. Pengguna',
+      icon: <Users size={20} />,
       subItems: [
         { name: 'Pelanggan', path: '/pelanggan', icon: <UserCircle size={16} /> },
         { name: 'Karyawan', path: '/karyawan', icon: <Briefcase size={16} /> },
@@ -60,9 +67,10 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-white flex flex-col sticky top-0 h-screen border-r border-slate-200 transition-all duration-300 ease-in-out z-50`}>
-      
-      {/* 1. Header Sidebar (Logo & Toggle) */}
+    <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-white flex flex-col sticky top-0 h-screen border-r border-slate-200 transition-all duration-300 ease-in-out ${showLogoutConfirm ? 'z-[100]' : 'z-50'
+      }`}>
+
+      {/* 1. Header Sidebar */}
       <div className="h-[72px] px-6 flex items-center justify-between border-b border-slate-200 shrink-0">
         {!isCollapsed && (
           <div className="flex items-center gap-3 overflow-hidden">
@@ -70,7 +78,7 @@ export default function Sidebar() {
             <h1 className="text-xl font-black italic text-[#1e3a5f] tracking-tight truncate">Wish Wash</h1>
           </div>
         )}
-        <button 
+        <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={`text-slate-400 hover:text-[#4FD1D9] transition-colors p-1 ${isCollapsed ? 'mx-auto' : ''}`}
         >
@@ -80,30 +88,26 @@ export default function Sidebar() {
 
       {/* 2. Menu Navigasi */}
       <nav className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto custom-scrollbar">
-        {/* Teks "SYSTEM" kecil (Opsional, seperti di referensi) */}
         {!isCollapsed && <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2 mt-2 px-2">Menu Utama</p>}
 
         {menuItems.map((item) => {
-          
-          // --- LOGIKA DROPDOWN ---
           if (item.subItems) {
             const isAnyChildActive = item.subItems.some(sub => pathname.startsWith(sub.path));
             const isOpen = item.name === 'Master Data' ? isMasterDataOpen : isManajemenOpen;
             const toggleOpen = () => {
-              if (isCollapsed) setIsCollapsed(false); // Buka sidebar dulu kalau lagi ketutup
+              if (isCollapsed) setIsCollapsed(false);
               if (item.name === 'Master Data') setIsMasterDataOpen(!isMasterDataOpen);
               else setIsManajemenOpen(!isManajemenOpen);
             };
 
             return (
               <div key={item.name} className="flex flex-col mb-1">
-                <button 
+                <button
                   onClick={toggleOpen}
-                  className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-200 ${
-                    isAnyChildActive 
-                      ? 'bg-[#4FD1D9]/10 text-[#2dbbc5] font-bold' 
+                  className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-200 ${isAnyChildActive
+                      ? 'bg-[#4FD1D9]/10 text-[#2dbbc5] font-bold'
                       : 'text-slate-500 hover:bg-slate-50 hover:text-[#1e3a5f]'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={isAnyChildActive ? 'text-[#2dbbc5]' : 'text-slate-400'}>{item.icon}</div>
@@ -116,20 +120,18 @@ export default function Sidebar() {
                   )}
                 </button>
 
-                {/* Sub Menu */}
                 {isOpen && !isCollapsed && (
                   <div className="flex flex-col gap-1 mt-1 ml-4 border-l-2 border-slate-100 pl-3">
                     {item.subItems.map((sub) => {
                       const isSubActive = pathname.startsWith(sub.path);
                       return (
-                        <Link 
-                          key={sub.name} 
+                        <Link
+                          key={sub.name}
                           href={sub.path}
-                          className={`flex items-center gap-3 p-2 rounded-lg text-sm transition-all ${
-                            isSubActive 
-                              ? 'text-[#2dbbc5] font-bold bg-[#4FD1D9]/5' 
+                          className={`flex items-center gap-3 p-2 rounded-lg text-sm transition-all ${isSubActive
+                              ? 'text-[#2dbbc5] font-bold bg-[#4FD1D9]/5'
                               : 'text-slate-500 hover:text-[#1e3a5f] hover:translate-x-1'
-                          }`}
+                            }`}
                         >
                           <div className={isSubActive ? 'text-[#2dbbc5]' : 'text-slate-300'}>{sub.icon}</div>
                           {sub.name}
@@ -142,17 +144,15 @@ export default function Sidebar() {
             );
           }
 
-          // --- LOGIKA MENU BIASA ---
           const isActive = pathname.startsWith(item.path!);
           return (
             <Link
               key={item.name}
               href={item.path!}
-              className={`flex items-center gap-3 p-3 mb-1 rounded-xl cursor-pointer transition-all duration-200 ${
-                isActive
+              className={`flex items-center gap-3 p-3 mb-1 rounded-xl cursor-pointer transition-all duration-200 ${isActive
                   ? 'bg-[#4FD1D9] text-white font-bold shadow-md shadow-[#4FD1D9]/20'
                   : 'text-slate-500 hover:bg-slate-50 hover:text-[#1e3a5f]'
-              } ${isCollapsed ? 'justify-center' : ''}`}
+                } ${isCollapsed ? 'justify-center' : ''}`}
             >
               <div className={isActive ? 'text-white' : 'text-slate-400'}>{item.icon}</div>
               {!isCollapsed && <span className="text-[15px]">{item.name}</span>}
@@ -161,10 +161,10 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* 3. Tombol Logout di Bawah */}
+      {/* 3. Tombol Logout */}
       <div className="p-4 border-t border-slate-100">
         <button
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
           className={`flex items-center gap-3 p-3 w-full rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors font-bold ${isCollapsed ? 'justify-center' : ''}`}
         >
           <LogOut size={20} />
@@ -172,9 +172,42 @@ export default function Sidebar() {
         </button>
       </div>
 
+      {/* 💡 MODAL KONFIRMASI LOGOUT */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1e3a5f]/40 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-[slideUpFade_0.3s_ease-out]">
+            <div className="p-8 text-center">
+              <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <LogOut size={32} className="text-red-500 ml-1" />
+              </div>
+              <h3 className="text-xl font-black text-[#1e3a5f] mb-2">Konfirmasi Keluar</h3>
+              <p className="text-slate-500 font-medium text-sm mb-8">
+                Apakah Anda yakin ingin keluar? Sesi Anda akan berakhir sekarang.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="px-6 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all active:scale-95"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={executeLogout}
+                  className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95"
+                >
+                  Ya, Keluar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar { display: none; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </aside>
   );

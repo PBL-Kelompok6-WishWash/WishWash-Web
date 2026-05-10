@@ -1,18 +1,21 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { ChevronDown, User, LogOut, Bell } from 'lucide-react';
+import { ChevronDown, User, LogOut, Bell, X } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation'; // 💡 Tambah usePathname
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function Header() {
     const [username, setUsername] = useState("Admin");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    // 💡 State untuk Modal Konfirmasi Logout
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
     const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
-    const pathname = usePathname(); // 💡 Ambil path URL saat ini
+    const pathname = usePathname();
 
-    // Cek apakah user sedang berada di halaman /profile
     const isProfilePage = pathname.startsWith('/profile');
 
     useEffect(() => {
@@ -23,25 +26,22 @@ export default function Header() {
             }
         };
 
-        // 1. Ambil nama saat pertama kali halaman dimuat
         fetchUsername();
-
-        // 2. Pasang "telinga" untuk mendengarkan Custom Event bernama "profileUpdated"
         window.addEventListener("profileUpdated", fetchUsername);
-
-        // 3. Bersihkan "telinga" saat komponen dihancurkan (best practice)
         return () => window.removeEventListener("profileUpdated", fetchUsername);
     }, []);
 
-    const handleLogout = () => {
+    // 💡 Fungsi eksekusi logout asli
+    const executeLogout = () => {
         localStorage.removeItem("jwt_token");
         localStorage.removeItem("id_role");
+        localStorage.removeItem("nama_user");
         router.replace("/auth");
     };
 
     return (
-        <header className="h-[72px] bg-white border-b border-slate-200 px-8 flex justify-between items-center sticky top-0 z-40 shrink-0">
-
+        <header className={`h-[72px] bg-white border-b border-slate-200 px-8 flex justify-between items-center sticky top-0 shrink-0 transition-all ${showLogoutConfirm ? 'z-[100]' : 'z-40'
+            }`}>
             {/* Kiri: Teks Welcome */}
             <div>
                 <p className="text-sm text-slate-500 font-medium mb-0.5">Welcome 👋</p>
@@ -70,22 +70,16 @@ export default function Header() {
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         className="flex items-center gap-3 cursor-pointer group select-none"
                     >
-                        {/* Teks Nama & Role */}
                         <div className="text-right hidden sm:block">
-                            {/* 💡 Logika Teks Nama: Cyan jika Open, Hover, ATAU sedang di halaman Profile */}
-                            <p className={`text-sm font-bold capitalize leading-none transition-colors duration-200 group-hover:text-[#4FD1D9] ${
-                                isDropdownOpen || isProfilePage ? 'text-[#4FD1D9]' : 'text-[#1e3a5f]'
-                            }`}>
+                            <p className={`text-sm font-bold capitalize leading-none transition-colors duration-200 group-hover:text-[#4FD1D9] ${isDropdownOpen || isProfilePage ? 'text-[#4FD1D9]' : 'text-[#1e3a5f]'
+                                }`}>
                                 {username}
                             </p>
                             <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Administrator</p>
                         </div>
 
-                        {/* Foto Profil */}
-                        {/* 💡 Logika Border Foto: Cyan jika Open, Hover, ATAU sedang di halaman Profile */}
-                        <div className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-colors duration-200 bg-slate-50 group-hover:border-[#4FD1D9] ${
-                            isDropdownOpen || isProfilePage ? 'border-[#4FD1D9]' : 'border-slate-100'
-                        }`}>
+                        <div className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-colors duration-200 bg-slate-50 group-hover:border-[#4FD1D9] ${isDropdownOpen || isProfilePage ? 'border-[#4FD1D9]' : 'border-slate-100'
+                            }`}>
                             <img
                                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`}
                                 alt="Admin"
@@ -93,12 +87,10 @@ export default function Header() {
                             />
                         </div>
 
-                        {/* 💡 Logika Chevron: Cyan jika Open, Hover, ATAU sedang di halaman Profile */}
                         <ChevronDown
                             size={16}
-                            className={`transition-all duration-200 group-hover:text-[#4FD1D9] ${
-                                isDropdownOpen ? 'rotate-180' : ''
-                            } ${isDropdownOpen || isProfilePage ? 'text-[#4FD1D9]' : 'text-slate-400'}`}
+                            className={`transition-all duration-200 group-hover:text-[#4FD1D9] ${isDropdownOpen ? 'rotate-180' : ''
+                                } ${isDropdownOpen || isProfilePage ? 'text-[#4FD1D9]' : 'text-slate-400'}`}
                         />
                     </div>
 
@@ -109,15 +101,18 @@ export default function Header() {
                                 <Link
                                     href="/profile"
                                     onClick={() => setIsDropdownOpen(false)}
-                                    className={`flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors font-medium border-b border-slate-50 ${
-                                        isProfilePage ? 'text-[#4FD1D9] bg-slate-50 font-bold' : 'text-[#1e3a5f]'
-                                    }`}
+                                    className={`flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors font-medium border-b border-slate-50 ${isProfilePage ? 'text-[#4FD1D9] bg-slate-50 font-bold' : 'text-[#1e3a5f]'
+                                        }`}
                                 >
                                     <User size={18} className={isProfilePage ? 'text-[#4FD1D9]' : 'text-slate-400'} />
                                     Profile
                                 </Link>
                                 <button
-                                    onClick={handleLogout}
+                                    // 💡 Pemicu modal konfirmasi
+                                    onClick={() => {
+                                        setIsDropdownOpen(false);
+                                        setShowLogoutConfirm(true);
+                                    }}
                                     className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-medium text-left w-full"
                                 >
                                     <LogOut size={18} />
@@ -126,9 +121,39 @@ export default function Header() {
                             </div>
                         </div>
                     )}
-
                 </div>
             </div>
+
+            {/* 💡 MODAL KONFIRMASI LOGOUT */}
+            {showLogoutConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1e3a5f]/40 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out]">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-[slideUpFade_0.3s_ease-out]">
+                        <div className="p-8 text-center">
+                            <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <LogOut size={32} className="text-red-500 ml-1" />
+                            </div>
+                            <h3 className="text-xl font-black text-[#1e3a5f] mb-2">Konfirmasi Keluar</h3>
+                            <p className="text-slate-500 font-medium text-sm mb-8 px-2">
+                                Apakah Anda yakin ingin mengakhiri sesi ini? Anda perlu login kembali untuk mengakses sistem.
+                            </p>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => setShowLogoutConfirm(false)}
+                                    className="px-6 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all active:scale-95"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={executeLogout}
+                                    className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95"
+                                >
+                                    Ya, Keluar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </header>
     );
 }
