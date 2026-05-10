@@ -19,6 +19,7 @@ export const loginAdmin = async (username: string, password: string) => {
         success: true,
         token: data.token,
         id_role: data.id_role,
+        display_name: data.display_name,
         message: data.message,
       };
     } else {

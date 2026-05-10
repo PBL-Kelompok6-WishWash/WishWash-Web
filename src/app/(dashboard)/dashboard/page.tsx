@@ -4,25 +4,6 @@ import { ShoppingBag, RefreshCcw, Truck, CheckCircle2, ChevronDown } from 'lucid
 export default function DashboardPage() {
   return (
     <>
-      {/* Header Khusus Dashboard */}
-      <header className="flex justify-between items-center mb-10">
-        <h2 className="text-[50px] font-bold text-[#1e3a5f] leading-tight">
-          Hi, Admin Mahesa!
-        </h2>
-        
-        {/* Profil Admin */}
-        <div className="flex items-center gap-3 bg-white p-2 px-4 rounded-full shadow-sm border border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors h-fit">
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#4FD1D9]">
-            <img 
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mahesa" 
-              alt="Admin" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <span className="font-bold text-[#1e3a5f]">Admin Mahesa</span>
-          <ChevronDown size={18} className="text-[#1e3a5f]" />
-        </div>
-      </header>
 
       {/* 4 Kartu Statistik Utama */}
       <div className="grid grid-cols-4 gap-6 mb-8">

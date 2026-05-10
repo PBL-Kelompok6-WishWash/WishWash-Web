@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, ClipboardList, Database, Users, 
-  LogOut, ChevronDown, ChevronRight,
+  LogOut, ChevronDown, ChevronRight, Menu,
   Droplets, Tag, CreditCard, Gift, UserCircle, Briefcase
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -14,11 +14,13 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   
-  // State untuk mengontrol dropdown terbuka/tertutup
+  // State untuk dropdown
   const [isMasterDataOpen, setIsMasterDataOpen] = useState(false);
   const [isManajemenOpen, setIsManajemenOpen] = useState(false);
+  
+  // State untuk Collapse (menyembunyikan) Sidebar - Nanti bisa kita hubungkan ke Global State kalau mau
+  const [isCollapsed, setIsCollapsed] = useState(false); 
 
-  // Otomatis buka dropdown jika user sedang berada di dalam halamannya
   useEffect(() => {
     if (['/layanan', '/parfum', '/metode_bayar', '/promo'].some(path => pathname.startsWith(path))) {
       setIsMasterDataOpen(true);
@@ -48,70 +50,88 @@ export default function Sidebar() {
       ]
     },
     { 
-      name: 'Manajemen Pengguna', 
+      name: 'Manaj. Pengguna', 
       icon: <Users size={20} />, 
       subItems: [
         { name: 'Pelanggan', path: '/pelanggan', icon: <UserCircle size={16} /> },
         { name: 'Karyawan', path: '/karyawan', icon: <Briefcase size={16} /> },
       ]
     }
-    // Menu Pengaturan sudah dihapus dari sini! 🧹
   ];
 
   return (
-    <aside className="w-64 bg-[#4FD1D9] text-[#1e3a5f] flex flex-col p-6 sticky top-0 h-screen shadow-lg overflow-y-auto custom-scrollbar">
-      <div className="flex flex-col items-center mb-8 mt-4">
-        <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm overflow-hidden p-3">
-          <Image src="/logo.png" alt="Logo WishWash" width={100} height={100} className="object-contain" />
-        </div>
-        <h1 className="text-2xl font-black italic text-[#1e3a5f]">Wish Wash</h1>
+    <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-white flex flex-col sticky top-0 h-screen border-r border-slate-200 transition-all duration-300 ease-in-out z-50`}>
+      
+      {/* 1. Header Sidebar (Logo & Toggle) */}
+      <div className="h-[72px] px-6 flex items-center justify-between border-b border-slate-200 shrink-0">
+        {!isCollapsed && (
+          <div className="flex items-center gap-3 overflow-hidden">
+            <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" />
+            <h1 className="text-xl font-black italic text-[#1e3a5f] tracking-tight truncate">Wish Wash</h1>
+          </div>
+        )}
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={`text-slate-400 hover:text-[#4FD1D9] transition-colors p-1 ${isCollapsed ? 'mx-auto' : ''}`}
+        >
+          <Menu size={24} />
+        </button>
       </div>
 
-      <nav className="flex-1 flex flex-col space-y-2">
+      {/* 2. Menu Navigasi */}
+      <nav className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto custom-scrollbar">
+        {/* Teks "SYSTEM" kecil (Opsional, seperti di referensi) */}
+        {!isCollapsed && <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2 mt-2 px-2">Menu Utama</p>}
+
         {menuItems.map((item) => {
           
-          // --- LOGIKA KHUSUS MENU DROPDOWN ---
+          // --- LOGIKA DROPDOWN ---
           if (item.subItems) {
             const isAnyChildActive = item.subItems.some(sub => pathname.startsWith(sub.path));
-            
-            // Tentukan state mana yang dipakai berdasarkan nama item
             const isOpen = item.name === 'Master Data' ? isMasterDataOpen : isManajemenOpen;
             const toggleOpen = () => {
+              if (isCollapsed) setIsCollapsed(false); // Buka sidebar dulu kalau lagi ketutup
               if (item.name === 'Master Data') setIsMasterDataOpen(!isMasterDataOpen);
               else setIsManajemenOpen(!isManajemenOpen);
             };
 
             return (
-              <div key={item.name} className="flex flex-col">
+              <div key={item.name} className="flex flex-col mb-1">
                 <button 
                   onClick={toggleOpen}
                   className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-200 ${
-                    isAnyChildActive ? 'bg-white/30 text-white font-bold' : 'text-[#1e3a5f] hover:bg-white/20'
+                    isAnyChildActive 
+                      ? 'bg-[#4FD1D9]/10 text-[#2dbbc5] font-bold' 
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-[#1e3a5f]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={isAnyChildActive ? 'text-white' : 'text-[#1e3a5f]'}>{item.icon}</div>
-                    <span className="text-lg">{item.name}</span>
+                    <div className={isAnyChildActive ? 'text-[#2dbbc5]' : 'text-slate-400'}>{item.icon}</div>
+                    {!isCollapsed && <span className="text-[15px]">{item.name}</span>}
                   </div>
-                  {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                  {!isCollapsed && (
+                    <div className={`transition-transform duration-200 text-slate-400 ${isOpen ? 'rotate-180' : ''}`}>
+                      <ChevronDown size={16} />
+                    </div>
+                  )}
                 </button>
 
-                {/* Sub Menu Item */}
-                {isOpen && (
-                  <div className="flex flex-col gap-1 mt-1 ml-4 border-l-2 border-white/40 pl-2 overflow-hidden">
+                {/* Sub Menu */}
+                {isOpen && !isCollapsed && (
+                  <div className="flex flex-col gap-1 mt-1 ml-4 border-l-2 border-slate-100 pl-3">
                     {item.subItems.map((sub) => {
                       const isSubActive = pathname.startsWith(sub.path);
                       return (
                         <Link 
                           key={sub.name} 
                           href={sub.path}
-                          className={`flex items-center gap-2 p-2.5 rounded-lg text-sm transition-all ${
+                          className={`flex items-center gap-3 p-2 rounded-lg text-sm transition-all ${
                             isSubActive 
-                              ? 'bg-white text-[#4FD1D9] font-extrabold shadow-sm' 
-                              : 'text-[#1e3a5f] hover:bg-white/40 font-medium'
+                              ? 'text-[#2dbbc5] font-bold bg-[#4FD1D9]/5' 
+                              : 'text-slate-500 hover:text-[#1e3a5f] hover:translate-x-1'
                           }`}
                         >
-                          {sub.icon}
+                          <div className={isSubActive ? 'text-[#2dbbc5]' : 'text-slate-300'}>{sub.icon}</div>
                           {sub.name}
                         </Link>
                       );
@@ -128,36 +148,33 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.path!}
-              className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 transform active:scale-95 ${
+              className={`flex items-center gap-3 p-3 mb-1 rounded-xl cursor-pointer transition-all duration-200 ${
                 isActive
-                  ? 'border-2 border-white bg-white/30 text-white font-bold shadow-sm'
-                  : 'text-[#1e3a5f] hover:bg-white/20 hover:translate-x-1'
-              }`}
+                  ? 'bg-[#4FD1D9] text-white font-bold shadow-md shadow-[#4FD1D9]/20'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-[#1e3a5f]'
+              } ${isCollapsed ? 'justify-center' : ''}`}
             >
-              <div className={isActive ? 'text-white' : 'text-[#1e3a5f]'}>{item.icon}</div>
-              <span className="text-lg">{item.name}</span>
+              <div className={isActive ? 'text-white' : 'text-slate-400'}>{item.icon}</div>
+              {!isCollapsed && <span className="text-[15px]">{item.name}</span>}
             </Link>
           );
         })}
       </nav>
 
-      <button
-        onClick={handleLogout}
-        className="mt-8 flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors font-bold"
-      >
-        <LogOut size={20} />
-        <span className="text-lg">Logout</span>
-      </button>
+      {/* 3. Tombol Logout di Bawah */}
+      <div className="p-4 border-t border-slate-100">
+        <button
+          onClick={handleLogout}
+          className={`flex items-center gap-3 p-3 w-full rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors font-bold ${isCollapsed ? 'justify-center' : ''}`}
+        >
+          <LogOut size={20} />
+          {!isCollapsed && <span className="text-[15px]">Logout</span>}
+        </button>
+      </div>
 
-      {/* CSS untuk menyembunyikan scrollbar agar rapi tapi tetap bisa di-scroll */}
       <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .custom-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .custom-scrollbar::-webkit-scrollbar { display: none; }
+        .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </aside>
   );

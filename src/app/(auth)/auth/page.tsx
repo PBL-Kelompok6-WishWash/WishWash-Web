@@ -62,12 +62,15 @@ export default function LoginPage() {
     // TAMPILKAN SPLASH SCREEN
     setIsLoading(true);
     
-    const result = await loginAdmin(username, password);
+    const result = await loginAdmin(username, password) as any;
 
     if (result.success) {
       if (result.id_role === 1) {
         localStorage.setItem("jwt_token", result.token);
         localStorage.setItem("id_role", result.id_role.toString());
+        if (result.display_name) {
+          localStorage.setItem("nama_user", result.display_name);
+        }
         if (rememberMe) {
           localStorage.setItem("remembered_username", username);
         } else {
