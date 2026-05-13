@@ -1,156 +1,374 @@
 "use client";
 
-import React, { useState } from 'react';
-import { ChevronLeft, Edit2, Trash2, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, Plus, Trash2, GripVertical, Save, ClipboardList, Tag, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter, useParams } from 'next/navigation';
+import { layananService } from '@/services/layananService';
 
-export default function EditLayananPage() {
-  const [status, setStatus] = useState('Aktif');
+import { 
+  DndContext, 
+  closestCenter, 
+  KeyboardSensor, 
+  PointerSensor, 
+  useSensor, 
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import { 
+  arrayMove, 
+  SortableContext, 
+  sortableKeyboardCoordinates, 
+  verticalListSortingStrategy, 
+  useSortable 
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableStatusItem({ id, index, status, onRemove, onChange }: any) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 1,
+  };
 
   return (
-    <div className="w-full bg-white min-h-screen p-8 rounded-2xl border-2 border-slate-100">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-10">
-        <Link href="/masterdata_layanan" className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-          <ChevronLeft size={32} className="text-[#123b6b]" strokeWidth={3} />
-        </Link>
-        <h1 className="text-2xl font-black text-[#123b6b]">Edit Layanan</h1>
+    <div 
+      ref={setNodeRef} 
+      style={style}
+      className={`flex items-center gap-3 bg-slate-50 p-3 rounded-xl border-2 shadow-sm transition-colors ${
+        isDragging ? 'border-[#4FD1D9] scale-105 shadow-md bg-white opacity-90' : 'border-slate-100 hover:border-[#4FD1D9]'
+      }`}
+    >
+      <div 
+        className="text-slate-300 cursor-grab active:cursor-grabbing p-1 hover:bg-slate-200 rounded" 
+        {...attributes} 
+        {...listeners}
+      >
+         <GripVertical size={20} />
       </div>
+      <div className="w-8 h-8 shrink-0 bg-[#1e3a5f] text-white rounded-lg flex items-center justify-center font-black text-sm shadow-inner">
+         {index + 1}
+      </div>
+      <input 
+         type="text"
+         value={status}
+         onChange={(e) => onChange(index, e.target.value)}
+         className="flex-1 bg-transparent outline-none font-bold text-[#1e3a5f]"
+         placeholder={`Nama status ke-${index + 1}`}
+      />
+      <button 
+         type="button"
+         onClick={() => onRemove(index)}
+         className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all"
+      >
+         <Trash2 size={18} />
+      </button>
+    </div>
+  );
+}
 
-      <hr className="mb-10 border-slate-200" />
+export default function EditLayananPage() {
+  const router = useRouter();
+  const params = useParams();
+  const id = Number(params.id);
+  
+  const [formData, setFormData] = useState({
+    nama_layanan: '',
+    gambar_layanan: '',
+    jenis_satuan: 'Kg',
+    harga_per_satuan: '' 
+  });
+  
+  const [statuses, setStatuses] = useState<{id: string, value: string}[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const formatCurrency = (val: string) => {
+    if (!val) return '';
+    return new Intl.NumberFormat('id-ID').format(parseInt(val, 10));
+  };
+
+  const handleHargaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    setFormData({...formData, harga_per_satuan: rawValue});
+  };
+
+  useEffect(() => {
+    const fetchLayanan = async () => {
+      try {
+        const res = await layananService.getById(id);
+        const data = res.data;
+        setFormData({
+          nama_layanan: data.nama_layanan,
+          gambar_layanan: data.gambar_layanan || '',
+          jenis_satuan: data.jenis_satuan,
+          harga_per_satuan: data.harga_per_satuan.toString()
+        });
         
-        {/* Kolom Kiri */}
-        <div className="space-y-8">
-          {/* ID Layanan */}
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-[#123b6b]">ID Layanan</label>
-            <input 
-              type="text" 
-              value="LS001" 
-              disabled 
-              className="w-full p-3 bg-slate-200 border-2 border-slate-300 rounded-lg text-slate-500 font-medium outline-none"
-            />
-          </div>
+        if (data.referensi_status && data.referensi_status.length > 0) {
+           setStatuses(data.referensi_status.map((s: any, i: number) => ({ id: `s-${i}`, value: s.nama_status })));
+        } else {
+           setStatuses([
+             { id: '1', value: 'Pickup' },
+             { id: '2', value: 'Wash' },
+             { id: '3', value: 'Delivery' },
+             { id: '4', value: 'Success' },
+           ]);
+        }
+      } catch (error) {
+        console.error("Gagal memuat data layanan", error);
+        alert("Gagal memuat data layanan. Kembali ke halaman sebelumnya.");
+        router.push('/layanan');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-          {/* Nama Layanan */}
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-[#123b6b]">Nama Layanan</label>
-            <input 
-              type="text" 
-              defaultValue="Wash & Ironing" 
-              className="w-full p-3 border-2 border-slate-200 rounded-lg focus:border-[#4FD1D9] outline-none transition-colors text-[#123b6b] font-medium"
-            />
-          </div>
+    if(id) fetchLayanan();
+  }, [id, router]);
 
-          {/* Gambar Layanan (Preview Mode) */}
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-[#123b6b]">Gambar Layanan</label>
-            <div className="relative w-full h-56 rounded-2xl overflow-hidden group">
-              {/* Gambar Background */}
-              <img 
-                src="https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?auto=format&fit=crop&w=600&q=80" 
-                alt="Preview Layanan" 
-                className="w-full h-full object-cover"
-              />
-              
-              {/* Overlay Buttons */}
-              <div className="absolute inset-0 bg-black/30 flex items-center justify-center gap-6 opacity-100 transition-opacity">
-                <button className="p-3 bg-white/90 hover:bg-white rounded-full shadow-lg transition-transform hover:scale-110">
-                  <Edit2 size={28} className="text-[#123b6b]" strokeWidth={2.5} />
-                </button>
-                <button className="p-3 bg-white/90 hover:bg-white rounded-full shadow-lg transition-transform hover:scale-110">
-                  <Trash2 size={28} className="text-red-600" strokeWidth={2.5} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+  const handleAddStatus = () => {
+    setStatuses([...statuses, { id: `id-${Date.now()}`, value: 'Tahap Baru' }]);
+  };
 
-        {/* Kolom Kanan */}
-        <div className="space-y-8">
-          {/* Jenis Satuan */}
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-[#123b6b]">Jenis Satuan</label>
-            <div className="relative">
-              <select className="w-full p-3 appearance-none border-2 border-slate-200 rounded-lg focus:border-[#4FD1D9] outline-none bg-white text-[#123b6b] font-medium cursor-pointer">
-                <option value="Kg">Kg</option>
-                <option value="Pcs">Pcs</option>
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#123b6b]" size={24} />
-            </div>
-          </div>
+  const handleRemoveStatus = (index: number) => {
+    const newStatuses = [...statuses];
+    newStatuses.splice(index, 1);
+    setStatuses(newStatuses);
+  };
 
-          {/* Harga */}
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-[#123b6b]">Harga</label>
-            <div className="flex items-center">
-              <div className="bg-slate-200 border-2 border-r-0 border-slate-200 px-4 py-3 rounded-l-lg text-slate-500 font-bold">
-                Rp
-              </div>
-              <input 
-                type="text" 
-                defaultValue="6.500" 
-                className="flex-1 p-3 border-2 border-slate-200 focus:border-[#4FD1D9] outline-none text-[#123b6b] font-medium"
-              />
-              <div className="bg-slate-200 border-2 border-l-0 border-slate-200 px-4 py-3 rounded-r-lg text-slate-500 font-medium">
-                / unit
-              </div>
-            </div>
-          </div>
+  const handleStatusChange = (index: number, val: string) => {
+    const newStatuses = [...statuses];
+    newStatuses[index].value = val;
+    setStatuses(newStatuses);
+  };
 
-          {/* Status */}
-          <div className="space-y-4">
-            <label className="block text-sm font-bold text-[#123b6b]">Status</label>
-            <div className="flex gap-16">
-              {/* Aktif */}
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative flex items-center justify-center">
-                  <input 
-                    type="radio" 
-                    className="sr-only" 
-                    checked={status === 'Aktif'}
-                    onChange={() => setStatus('Aktif')}
-                  />
-                  <div className={`w-7 h-7 rounded-full border-2 transition-all ${status === 'Aktif' ? 'border-[#1e9a9f]' : 'border-slate-300'}`}></div>
-                  {status === 'Aktif' && <div className="absolute w-4 h-4 bg-[#1e9a9f] rounded-full"></div>}
-                </div>
-                <span className={`font-bold ${status === 'Aktif' ? 'text-[#123b6b]' : 'text-slate-400'}`}>Aktif</span>
-              </label>
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setStatuses((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
-              {/* Nonaktif */}
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative flex items-center justify-center">
-                  <input 
-                    type="radio" 
-                    className="sr-only" 
-                    checked={status === 'Nonaktif'}
-                    onChange={() => setStatus('Nonaktif')}
-                  />
-                  <div className={`w-7 h-7 rounded-full border-2 transition-all ${status === 'Nonaktif' ? 'border-[#123b6b]' : 'border-slate-300'}`}></div>
-                  {status === 'Nonaktif' && <div className="absolute w-4 h-4 bg-[#123b6b] rounded-full"></div>}
-                </div>
-                <span className={`font-bold ${status === 'Nonaktif' ? 'text-[#123b6b]' : 'text-slate-400'}`}>Nonaktif</span>
-              </label>
-            </div>
-          </div>
-        </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.nama_layanan || !formData.harga_per_satuan) {
+      setErrorMsg("Mohon isi semua field yang wajib!");
+      return;
+    }
+    
+    if (statuses.length === 0) {
+      setErrorMsg("Mohon tambahkan minimal 1 status layanan!");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMsg("");
+    try {
+      await layananService.update(id, {
+        nama_layanan: formData.nama_layanan,
+        gambar_layanan: formData.gambar_layanan,
+        jenis_satuan: formData.jenis_satuan,
+        harga_per_satuan: parseFloat(formData.harga_per_satuan),
+        referensi_status: statuses.map(s => s.value).filter(v => v.trim() !== "")
+      });
+      sessionStorage.setItem('layanan_notif', `Berhasil memperbarui layanan ${formData.nama_layanan}!`);
+      router.push('/layanan');
+    } catch (error: any) {
+      setErrorMsg(error.message || "Gagal mengupdate layanan");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-500 font-bold">Memuat data...</div>;
+  }
+
+  return (
+    <div className="w-full max-w-5xl mx-auto relative pb-10">
+      
+      <div className="flex items-center gap-4 mb-8">
+        <Link 
+          href="/layanan"
+          className="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-[#4FD1D9] hover:border-[#4FD1D9] hover:bg-[#4FD1D9]/10 transition-all active:scale-95 shadow-sm"
+        >
+          <ChevronLeft size={20} />
+        </Link>
+        <h2 className="text-3xl font-black text-[#1e3a5f] tracking-wider uppercase">
+          Edit Layanan
+        </h2>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-4 mt-20">
-        <Link 
-          href="/masterdata_layanan"
-          className="flex-1 py-4 border-2 border-[#4FD1D9] text-[#1e9a9f] font-black rounded-xl text-center hover:bg-slate-50 transition-colors"
-        >
-          Batal
-        </Link>
-        <button 
-          className="flex-1 py-4 bg-[#1e9a9f] text-white font-black rounded-xl hover:bg-[#167d81] transition-colors shadow-lg shadow-teal-100"
-        >
-          Simpan
-        </button>
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+        
+        <div className="bg-[#1e3a5f] p-5 text-white flex items-center gap-4">
+          <div className="p-2 bg-white/20 rounded-lg shrink-0">
+            <ClipboardList size={24} className="text-[#4FD1D9]" />
+          </div>
+          <div className="flex flex-col">
+            <h3 className="text-base font-bold leading-tight">Formulir Edit Layanan</h3>
+            <p className="text-[11px] text-slate-300 font-medium leading-tight mt-0.5">
+               Perbarui jenis layanan dan urutan status pesanan.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-8">
+          
+          {errorMsg && (
+            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-600 font-medium rounded-r-xl text-sm">
+              {errorMsg}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-10">
+            
+            <div className="space-y-6">
+              <h2 className="text-lg font-black text-[#1e3a5f] border-b-2 border-slate-100 pb-2 flex items-center gap-2">
+                 <Tag size={18} className="text-[#4FD1D9]" /> Informasi Dasar
+              </h2>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Nama Layanan <span className="text-red-500">*</span></label>
+                <div className="relative">
+                   <input 
+                     type="text" 
+                     required
+                     value={formData.nama_layanan}
+                     onChange={(e) => setFormData({...formData, nama_layanan: e.target.value})}
+                     placeholder="Contoh: Wash & Ironing" 
+                     className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all"
+                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Jenis Satuan <span className="text-red-500">*</span></label>
+                <select 
+                  value={formData.jenis_satuan}
+                  onChange={(e) => setFormData({...formData, jenis_satuan: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] bg-white text-[#1e3a5f] font-medium cursor-pointer transition-all"
+                >
+                  <option value="Kg">Kg</option>
+                  <option value="Pcs">Pcs</option>
+                  <option value="Meter">Meter</option>
+                  <option value="Pasang">Pasang</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Harga per Satuan <span className="text-red-500">*</span></label>
+                <div className="flex items-center">
+                  <div className="bg-slate-100 border-2 border-r-0 border-slate-100 px-4 py-3 rounded-l-xl text-slate-500 font-bold">
+                    Rp
+                  </div>
+                  <input 
+                    type="text" 
+                    required
+                    value={formData.harga_per_satuan ? formatCurrency(formData.harga_per_satuan) : ''}
+                    onChange={handleHargaChange}
+                    placeholder="10.000" 
+                    className="flex-1 px-4 py-3 rounded-r-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1">URL Gambar (Opsional)</label>
+                <div className="relative">
+                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                     <ImageIcon size={18} className="text-slate-400" />
+                   </div>
+                   <input 
+                     type="text" 
+                     value={formData.gambar_layanan}
+                     onChange={(e) => setFormData({...formData, gambar_layanan: e.target.value})}
+                     placeholder="https://..." 
+                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all"
+                   />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b-2 border-slate-100 pb-2">
+                 <h2 className="text-lg font-black text-[#1e3a5f] flex items-center gap-2">
+                    <ClipboardList size={18} className="text-[#4FD1D9]" /> Alur Status Layanan
+                 </h2>
+                 <button 
+                   type="button" 
+                   onClick={handleAddStatus}
+                   className="flex items-center gap-1 text-sm bg-[#4FD1D9]/10 text-[#1e9a9f] px-3 py-1.5 rounded-lg font-bold hover:bg-[#4FD1D9]/20 transition-colors"
+                 >
+                   <Plus size={16} /> Tambah Tahap
+                 </button>
+              </div>
+              
+              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                 <p className="text-xs font-medium text-blue-800 leading-relaxed">
+                    Tentukan urutan status pesanan. Tahan dan geser icon di sebelah kiri untuk mengubah urutan secara profesional.
+                 </p>
+              </div>
+
+              <div className="space-y-3">
+                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                   <SortableContext items={statuses.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                     {statuses.map((status, index) => (
+                       <SortableStatusItem 
+                         key={status.id}
+                         id={status.id}
+                         index={index}
+                         status={status.value}
+                         onRemove={handleRemoveStatus}
+                         onChange={handleStatusChange}
+                       />
+                     ))}
+                   </SortableContext>
+                 </DndContext>
+                 
+                 {statuses.length === 0 && (
+                    <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">
+                       <p className="text-sm font-medium text-slate-400">Belum ada tahapan status.</p>
+                    </div>
+                 )}
+              </div>
+            </div>
+
+          </div>
+
+          <div className="mt-12 flex justify-end gap-3 pt-6 border-t border-slate-100">
+            <Link 
+              href="/layanan"
+              className="px-8 py-3.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all active:scale-95"
+            >
+              Batal
+            </Link>
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="flex items-center gap-2 bg-[#1e3a5f] hover:bg-[#122640] text-white px-10 py-3.5 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-[#1e3a5f]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              <Save size={20} />
+              {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+            </button>
+          </div>
+        </form>
+
       </div>
     </div>
   );

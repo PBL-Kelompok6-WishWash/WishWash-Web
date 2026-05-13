@@ -3,39 +3,30 @@
 import React, { useEffect, useState } from 'react';
 import {
   Search, Plus, Edit, Trash2, ChevronUp, ChevronDown,
-  ChevronLeft, ChevronRight, Image as ImageIcon, 
-  CheckCircle, XCircle, X
+  ChevronLeft, ChevronRight, CheckCircle, XCircle, X
 } from 'lucide-react';
-import { layananService } from '@/services/layananService';
+import { paketLayananService } from '@/services/paketLayananService';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
-interface ReferensiStatus {
-  id_referensi_status_layanan: number;
-  nama_status: string;
-  urutan_tahap: number;
+interface PaketLayanan {
+  id_paket_layanan: number;
+  nama_paket: string;
+  durasi_jam: number;
+  biaya_tambahan: number;
 }
 
-interface Layanan {
-  id_layanan: number;
-  nama_layanan: string;
-  gambar_layanan: string;
-  jenis_satuan: string;
-  harga_per_satuan: number;
-  referensi_status: ReferensiStatus[];
-}
-
-export default function LayananPage() {
-  const [data, setData] = useState<Layanan[]>([]);
+export default function PaketLayananPage() {
+  const [data, setData] = useState<PaketLayanan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notif, setNotif] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
   const pathname = usePathname();
   useEffect(() => {
-    const savedNotif = sessionStorage.getItem('layanan_notif');
+    const savedNotif = sessionStorage.getItem('paket_notif');
     if (savedNotif) {
       setNotif({ message: savedNotif, type: 'success' });
-      sessionStorage.removeItem('layanan_notif'); 
+      sessionStorage.removeItem('paket_notif'); 
     }
   }, [pathname]);
 
@@ -51,38 +42,38 @@ export default function LayananPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({
-    key: 'id_layanan',
+    key: 'id_paket_layanan',
     direction: 'asc'
   });
 
-  const fetchLayanan = async () => {
+  const fetchPakets = async () => {
     setIsLoading(true);
     try {
-      const result = await layananService.getAll();
+      const result = await paketLayananService.getAll();
       setData(result.data || []);
     } catch (error) {
-      console.error("Error fetching layanan:", error);
+      console.error("Error fetching paket layanan:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchLayanan();
+    fetchPakets();
   }, []);
 
   const handleDelete = async (id: number, nama: string) => {
-    if (!window.confirm(`Yakin ingin menghapus layanan ${nama}?`)) return;
+    if (!window.confirm(`Yakin ingin menghapus paket layanan ${nama}?`)) return;
 
     try {
-      await layananService.delete(id);
-      setData(data.filter(item => item.id_layanan !== id));
+      await paketLayananService.delete(id);
+      setData(data.filter(item => item.id_paket_layanan !== id));
       
-      setNotif({ message: `Berhasil menghapus layanan ${nama} (ID: ${id})!`, type: 'success' });
+      setNotif({ message: `Berhasil menghapus paket ${nama} (ID: ${id})!`, type: 'success' });
       
     } catch (error) {
       console.error(error);
-      setNotif({ message: `Gagal menghapus layanan ${nama}.`, type: 'error' });
+      setNotif({ message: `Gagal menghapus paket ${nama}.`, type: 'error' });
     }
   };
 
@@ -98,8 +89,7 @@ export default function LayananPage() {
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       result = result.filter(item =>
-        (item.nama_layanan || '').toLowerCase().includes(lowerQuery) ||
-        (item.jenis_satuan || '').toLowerCase().includes(lowerQuery)
+        (item.nama_paket || '').toLowerCase().includes(lowerQuery)
       );
     }
 
@@ -152,7 +142,7 @@ export default function LayananPage() {
   return (
     <div className="w-full relative">
       <h2 className="text-3xl font-black text-[#1e3a5f] uppercase mb-8 tracking-wider">
-        Daftar Layanan
+        Master Paket Layanan
       </h2>
 
       {notif && (
@@ -186,7 +176,7 @@ export default function LayananPage() {
               </div>
               <input
                 type="text"
-                placeholder="Cari layanan..."
+                placeholder="Cari paket..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] text-sm font-medium transition-colors"
@@ -207,43 +197,42 @@ export default function LayananPage() {
           </div>
 
           <Link
-            href="/layanan/tambah"
+            href="/paket-layanan/tambah"
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#1e3a5f] hover:bg-[#122640] text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-md shadow-[#1e3a5f]/20"
           >
-            <Plus size={18} /> Tambah Layanan
+            <Plus size={18} /> Tambah Paket
           </Link>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse border-y border-slate-200 min-w-[1000px]">
+          <table className="w-full text-left border-collapse border-y border-slate-200 min-w-[800px]">
             <thead>
               <tr className="bg-[#1e3a5f] text-white text-xs uppercase tracking-widest select-none">
-                <th className="p-4 font-bold text-center w-20 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_layanan')}>
+                <th className="p-4 font-bold text-center w-20 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_paket_layanan')}>
                   <div className="flex items-center justify-center">
                     ID
-                    {renderSortIcon('id_layanan')}
+                    {renderSortIcon('id_paket_layanan')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold text-center w-24 border-x border-white/10">Gambar</th>
-
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_layanan')}>
+                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_paket')}>
                   <div className="flex items-center justify-between">
-                    <span>Nama Layanan</span>
-                    {renderSortIcon('nama_layanan')}
+                    <span>Nama Paket</span>
+                    {renderSortIcon('nama_paket')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('harga_per_satuan')}>
+                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('durasi_jam')}>
                   <div className="flex items-center justify-between">
-                    <span>Harga / Satuan</span>
-                    {renderSortIcon('harga_per_satuan')}
+                    <span>Durasi Waktu</span>
+                    {renderSortIcon('durasi_jam')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold border-x border-white/10">
+                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('biaya_tambahan')}>
                   <div className="flex items-center justify-between">
-                    <span>Urutan Status</span>
+                    <span>Biaya Tambahan</span>
+                    {renderSortIcon('biaya_tambahan')}
                   </div>
                 </th>
 
@@ -254,7 +243,7 @@ export default function LayananPage() {
             <tbody className="text-sm">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                  <td colSpan={5} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
                     <div className="flex justify-center mb-2">
                       <div className="w-8 h-8 border-4 border-slate-200 border-t-[#4FD1D9] rounded-full animate-spin"></div>
                     </div>
@@ -263,55 +252,31 @@ export default function LayananPage() {
                 </tr>
               ) : paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
-                    {searchQuery ? "Data tidak ditemukan." : "Belum ada data layanan."}
+                  <td colSpan={5} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                    {searchQuery ? "Data tidak ditemukan." : "Belum ada data paket layanan."}
                   </td>
                 </tr>
               ) : (
                 paginatedData.map((row) => (
-                  <tr key={row.id_layanan} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
+                  <tr key={row.id_paket_layanan} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
                     <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">
-                      {row.id_layanan}
-                    </td>
-                    <td className="p-4 flex justify-center border-x border-slate-200">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner">
-                        {row.gambar_layanan ? (
-                          <img
-                            src={row.gambar_layanan}
-                            alt={row.nama_layanan}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = 'https://via.placeholder.com/150';
-                            }}
-                          />
-                        ) : (
-                          <ImageIcon size={20} />
-                        )}
-                      </div>
+                      {row.id_paket_layanan}
                     </td>
                     <td className="p-4 font-bold text-[#1e3a5f] border-x border-slate-200">
-                      {row.nama_layanan}
+                      {row.nama_paket}
                     </td>
                     <td className="p-4 font-medium text-slate-700 border-x border-slate-200">
-                      Rp {row.harga_per_satuan.toLocaleString('id-ID')} <span className="text-slate-400">/ {row.jenis_satuan}</span>
+                      <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-bold">
+                        {row.durasi_jam} Jam
+                      </span>
                     </td>
-                    <td className="p-4 border-x border-slate-200">
-                       <div className="flex flex-wrap gap-1.5">
-                          {row.referensi_status && row.referensi_status.length > 0 ? (
-                             row.referensi_status.map((status, idx) => (
-                               <span key={status.id_referensi_status_layanan} className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md border border-blue-200 text-xs font-bold">
-                                 {idx + 1}. {status.nama_status}
-                               </span>
-                             ))
-                          ) : (
-                            <span className="text-slate-400 italic text-xs">Belum ada status</span>
-                          )}
-                       </div>
+                    <td className="p-4 font-medium text-slate-700 border-x border-slate-200">
+                      <span className="text-emerald-600 font-bold">+ Rp {row.biaya_tambahan.toLocaleString('id-ID')}</span>
                     </td>
                     <td className="p-4 border-x border-slate-200">
                       <div className="flex items-center justify-center gap-2">
                         <Link
-                          href={`/layanan/edit/${row.id_layanan}`}
+                          href={`/paket-layanan/edit/${row.id_paket_layanan}`}
                           title="Edit"
                           className="p-2 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
                         >
@@ -319,7 +284,7 @@ export default function LayananPage() {
                         </Link>
                         <button
                           title="Hapus"
-                          onClick={() => handleDelete(row.id_layanan, row.nama_layanan)}
+                          onClick={() => handleDelete(row.id_paket_layanan, row.nama_paket)}
                           className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
                         >
                           <Trash2 size={16} />
