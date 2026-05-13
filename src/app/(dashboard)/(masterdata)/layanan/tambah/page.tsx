@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { ChevronLeft, Plus, Trash2, GripVertical, Save, ClipboardList, Tag, Image as ImageIcon } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, GripVertical, Save, ClipboardList, Tag, Image as ImageIcon, Package, Clock, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { layananService } from '@/services/layananService';
@@ -84,6 +84,9 @@ export default function TambahLayananPage() {
     { id: 'id-3', value: 'Delivery' },
     { id: 'id-4', value: 'Success' },
   ]);
+
+  const [pakets, setPakets] = useState<{id: string, nama_paket: string, durasi_jam: string, biaya_tambahan: string}[]>([]);
+  const [preview, setPreview] = useState<string | null>(null);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -103,6 +106,30 @@ export default function TambahLayananPage() {
   const handleHargaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/\D/g, '');
     setFormData({...formData, harga_per_satuan: rawValue});
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { 
+        alert("Ukuran file terlalu besar! Maksimal 1MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setPreview(base64String);
+        setFormData({ ...formData, gambar_layanan: base64String });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeFoto = () => {
+    setPreview(null);
+    setFormData({ ...formData, gambar_layanan: "" });
+    const fileInput = document.getElementById('gambar_upload') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
   };
 
   const handleAddStatus = () => {
@@ -132,6 +159,25 @@ export default function TambahLayananPage() {
     }
   };
 
+  const handleAddPaket = () => {
+    setPakets([...pakets, { id: `pkt-${Date.now()}`, nama_paket: '', durasi_jam: '', biaya_tambahan: '' }]);
+  };
+
+  const handleRemovePaket = (index: number) => {
+    const newPakets = [...pakets];
+    newPakets.splice(index, 1);
+    setPakets(newPakets);
+  };
+
+  const handlePaketChange = (index: number, field: string, value: string) => {
+    const newPakets = [...pakets];
+    if (field === 'biaya_tambahan') {
+       value = value.replace(/\D/g, '');
+    }
+    newPakets[index] = { ...newPakets[index], [field]: value };
+    setPakets(newPakets);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nama_layanan || !formData.harga_per_satuan) {
@@ -152,7 +198,12 @@ export default function TambahLayananPage() {
         gambar_layanan: formData.gambar_layanan,
         jenis_satuan: formData.jenis_satuan,
         harga_per_satuan: parseFloat(formData.harga_per_satuan),
-        referensi_status: statuses.map(s => s.value).filter(v => v.trim() !== "")
+        referensi_status: statuses.map(s => s.value).filter(v => v.trim() !== ""),
+        paket_layanan: pakets.map(p => ({
+           nama_paket: p.nama_paket || 'Tanpa Nama',
+           durasi_jam: parseInt(p.durasi_jam) || 0,
+           biaya_tambahan: parseFloat(p.biaya_tambahan) || 0
+        }))
       });
       sessionStorage.setItem('layanan_notif', `Berhasil menambah layanan ${formData.nama_layanan}!`);
       router.push('/layanan');
@@ -187,7 +238,7 @@ export default function TambahLayananPage() {
           <div className="flex flex-col">
             <h3 className="text-base font-bold leading-tight">Formulir Data Layanan</h3>
             <p className="text-[11px] text-slate-300 font-medium leading-tight mt-0.5">
-               Tentukan jenis layanan dan urutan status pesanan untuk layanan ini.
+               Tentukan jenis layanan, urutan status pesanan, beserta variasi paket untuk layanan ini.
             </p>
           </div>
         </div>
@@ -253,19 +304,31 @@ export default function TambahLayananPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-[#1e3a5f] ml-1">URL Gambar (Opsional)</label>
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Gambar Layanan (Opsional)</label>
                 <div className="relative">
                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                      <ImageIcon size={18} className="text-slate-400" />
                    </div>
-                   <input 
-                     type="text" 
-                     value={formData.gambar_layanan}
-                     onChange={(e) => setFormData({...formData, gambar_layanan: e.target.value})}
-                     placeholder="https://..." 
-                     className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all"
+                   <input
+                     id="gambar_upload"
+                     type="file"
+                     accept="image/*"
+                     onChange={handleFileChange}
+                     className="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-sm font-medium transition-all text-slate-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#1e3a5f]/10 file:text-[#1e3a5f] hover:file:bg-[#1e3a5f]/20 cursor-pointer"
                    />
                 </div>
+                {preview && (
+                  <div className="mt-3 relative w-32 h-32 rounded-2xl border-4 border-slate-100 overflow-hidden shadow-sm">
+                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                    <button 
+                      type="button"
+                      onClick={removeFoto}
+                      className="absolute top-1.5 right-1.5 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -283,12 +346,6 @@ export default function TambahLayananPage() {
                  </button>
               </div>
               
-              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-                 <p className="text-xs font-medium text-blue-800 leading-relaxed">
-                    Tentukan urutan status pesanan. Tahan dan geser icon di sebelah kiri untuk mengubah urutan secara profesional.
-                 </p>
-              </div>
-
               <div className="space-y-3">
                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                    <SortableContext items={statuses.map(s => s.id)} strategy={verticalListSortingStrategy}>
@@ -313,6 +370,87 @@ export default function TambahLayananPage() {
               </div>
             </div>
 
+          </div>
+
+          <div className="mt-12 space-y-6 pt-6 border-t-2 border-slate-100">
+              <div className="flex items-center justify-between border-b-2 border-slate-100 pb-2">
+                 <h2 className="text-lg font-black text-[#1e3a5f] flex items-center gap-2">
+                    <Package size={18} className="text-[#4FD1D9]" /> Paket Layanan
+                 </h2>
+                 <button 
+                   type="button" 
+                   onClick={handleAddPaket}
+                   className="flex items-center gap-1 text-sm bg-[#4FD1D9]/10 text-[#1e9a9f] px-4 py-2 rounded-lg font-bold hover:bg-[#4FD1D9]/20 transition-colors shadow-sm"
+                 >
+                   <Plus size={16} /> Tambah Paket
+                 </button>
+              </div>
+
+              {pakets.length === 0 ? (
+                 <div className="text-center py-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl">
+                    <Package size={32} className="mx-auto text-slate-300 mb-2" />
+                    <p className="text-sm font-medium text-slate-400">Tidak ada paket tambahan khusus untuk layanan ini.</p>
+                 </div>
+              ) : (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {pakets.map((paket, index) => (
+                       <div key={paket.id} className="bg-white p-5 rounded-2xl border-2 border-slate-100 shadow-sm relative group hover:border-[#4FD1D9] transition-colors">
+                          <button 
+                             type="button"
+                             onClick={() => handleRemovePaket(index)}
+                             className="absolute top-4 right-4 text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                          >
+                             <Trash2 size={16} />
+                          </button>
+                          
+                          <div className="space-y-4 mt-2">
+                             <div>
+                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Paket</label>
+                               <input 
+                                 type="text"
+                                 placeholder="Reguler / Express"
+                                 value={paket.nama_paket}
+                                 onChange={(e) => handlePaketChange(index, 'nama_paket', e.target.value)}
+                                 className="w-full mt-1 border-b-2 border-slate-200 focus:border-[#4FD1D9] outline-none py-1.5 text-[#1e3a5f] font-bold transition-colors"
+                               />
+                             </div>
+
+                             <div className="flex gap-4">
+                               <div className="flex-1">
+                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-1">
+                                    <Clock size={12} /> Durasi
+                                 </label>
+                                 <div className="flex items-center mt-1">
+                                    <input 
+                                       type="number"
+                                       placeholder="24"
+                                       value={paket.durasi_jam}
+                                       onChange={(e) => handlePaketChange(index, 'durasi_jam', e.target.value)}
+                                       className="w-full border-b-2 border-slate-200 focus:border-[#4FD1D9] outline-none py-1.5 text-[#1e3a5f] font-bold transition-colors"
+                                    />
+                                    <span className="text-xs font-bold text-slate-400 ml-2">Jam</span>
+                                 </div>
+                               </div>
+                               
+                               <div className="flex-[1.5]">
+                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Biaya Tambahan</label>
+                                 <div className="flex items-center mt-1">
+                                    <span className="text-xs font-bold text-slate-400 mr-2">Rp</span>
+                                    <input 
+                                       type="text"
+                                       placeholder="0"
+                                       value={paket.biaya_tambahan ? formatCurrency(paket.biaya_tambahan) : ''}
+                                       onChange={(e) => handlePaketChange(index, 'biaya_tambahan', e.target.value)}
+                                       className="w-full border-b-2 border-slate-200 focus:border-[#4FD1D9] outline-none py-1.5 text-[#1e3a5f] font-bold transition-colors"
+                                    />
+                                 </div>
+                               </div>
+                             </div>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              )}
           </div>
 
           <div className="mt-12 flex justify-end gap-3 pt-6 border-t border-slate-100">

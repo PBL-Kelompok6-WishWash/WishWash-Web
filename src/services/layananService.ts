@@ -1,4 +1,19 @@
 // src/services/layananService.ts
+export interface PaketLayananDTO {
+  nama_paket: string;
+  durasi_jam: number;
+  biaya_tambahan: number;
+}
+
+export interface LayananDTO {
+  nama_layanan: string;
+  gambar_layanan?: string;
+  jenis_satuan: string;
+  harga_per_satuan: number;
+  referensi_status: string[];
+  paket_layanan?: PaketLayananDTO[];
+}
+
 const BASE_URL = 'http://localhost:8080/api/v1/admin/layanan';
 
 const getAuthHeaders = () => {
@@ -29,7 +44,7 @@ export const layananService = {
     return result;
   },
 
-  create: async (data: any) => {
+  create: async (data: LayananDTO) => {
     const res = await fetch(BASE_URL, {
       method: "POST",
       headers: getAuthHeaders(),
@@ -40,7 +55,7 @@ export const layananService = {
     return result;
   },
 
-  update: async (id: number, data: any) => {
+  update: async (id: number, data: LayananDTO) => {
     const res = await fetch(`${BASE_URL}/${id}`, {
       method: "PUT",
       headers: getAuthHeaders(),

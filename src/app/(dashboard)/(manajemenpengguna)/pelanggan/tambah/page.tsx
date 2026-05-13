@@ -118,7 +118,7 @@ export default function TambahPelangganPage() {
             
             {/* Input Nama Lengkap */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Nama Lengkap</label>
+              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Nama Lengkap <span className="text-red-500">*</span></label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <User size={18} className="text-slate-400" />
@@ -137,7 +137,7 @@ export default function TambahPelangganPage() {
 
             {/* Input No Telp */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Nomor WhatsApp</label>
+              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Nomor WhatsApp <span className="text-red-500">*</span></label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Phone size={18} className="text-slate-400" />
@@ -156,7 +156,7 @@ export default function TambahPelangganPage() {
 
             {/* Input Username */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Username</label>
+              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Username <span className="text-red-500">*</span></label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <span className="text-slate-400 font-bold ml-0.5">@</span>
@@ -175,7 +175,7 @@ export default function TambahPelangganPage() {
 
             {/* Input Email */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Alamat Email</label>
+              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Alamat Email <span className="text-red-500">*</span></label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Mail size={18} className="text-slate-400" />
@@ -194,7 +194,7 @@ export default function TambahPelangganPage() {
 
             {/* Input Password */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Password Akun</label>
+              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Password Akun <span className="text-red-500">*</span></label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock size={18} className="text-slate-400" />
