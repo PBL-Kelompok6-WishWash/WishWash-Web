@@ -135,8 +135,8 @@ export default function EditLayananPage() {
            ]);
         }
 
-        if (data.PaketLayanan && data.PaketLayanan.length > 0) {
-           setPakets(data.PaketLayanan.map((p: any, i: number) => ({
+        if (data.paket_layanan && data.paket_layanan.length > 0) {
+           setPakets(data.paket_layanan.map((p: any, i: number) => ({
              id: `p-${i}`,
              nama_paket: p.nama_paket,
              durasi_jam: p.durasi_jam.toString(),
@@ -355,7 +355,7 @@ export default function EditLayananPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Gambar Layanan (Opsional)</label>
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Gambar Layanan</label>
                 <div className="relative">
                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                      <ImageIcon size={18} className="text-slate-400" />
@@ -391,7 +391,7 @@ export default function EditLayananPage() {
                  <button 
                    type="button" 
                    onClick={handleAddStatus}
-                   className="flex items-center gap-1 text-sm bg-[#4FD1D9]/10 text-[#1e9a9f] px-3 py-1.5 rounded-lg font-bold hover:bg-[#4FD1D9]/20 transition-colors"
+                   className="flex items-center gap-1 text-sm bg-[#4FD1D9]/10 text-[#1e9a9f] px-4 py-2 rounded-lg font-bold hover:bg-[#4FD1D9]/20 transition-colors shadow-md border border-[#1e9a9f]/30"
                  >
                    <Plus size={16} /> Tambah Tahap
                  </button>
@@ -431,7 +431,7 @@ export default function EditLayananPage() {
                  <button 
                    type="button" 
                    onClick={handleAddPaket}
-                   className="flex items-center gap-1 text-sm bg-[#4FD1D9]/10 text-[#1e9a9f] px-4 py-2 rounded-lg font-bold hover:bg-[#4FD1D9]/20 transition-colors shadow-sm"
+                   className="flex items-center gap-1 text-sm bg-[#4FD1D9]/10 text-[#1e9a9f] px-5 py-2.5 rounded-lg font-bold hover:bg-[#4FD1D9]/20 transition-colors shadow-md border border-[#1e9a9f]/30"
                  >
                    <Plus size={16} /> Tambah Paket
                  </button>
@@ -444,62 +444,73 @@ export default function EditLayananPage() {
                  </div>
               ) : (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {pakets.map((paket, index) => (
-                       <div key={paket.id} className="bg-white p-5 rounded-2xl border-2 border-slate-100 shadow-sm relative group hover:border-[#4FD1D9] transition-colors">
-                          <button 
-                             type="button"
-                             onClick={() => handleRemovePaket(index)}
-                             className="absolute top-4 right-4 text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
-                          >
-                             <Trash2 size={16} />
-                          </button>
-                          
-                          <div className="space-y-4 mt-2">
-                             <div>
-                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Paket</label>
-                               <input 
-                                 type="text"
-                                 placeholder="Reguler / Express"
-                                 value={paket.nama_paket}
-                                 onChange={(e) => handlePaketChange(index, 'nama_paket', e.target.value)}
-                                 className="w-full mt-1 border-b-2 border-slate-200 focus:border-[#4FD1D9] outline-none py-1.5 text-[#1e3a5f] font-bold transition-colors"
-                               />
-                             </div>
+                     {pakets.map((paket, index) => (
+                        <div key={paket.id} className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-[#4FD1D9]/50 transition-all duration-300 group">
+                           {/* Header Card */}
+                           <div className="bg-gradient-to-r from-[#1e3a5f] to-[#2a5288] p-4 flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-white">
+                                 <Package size={18} className="text-[#4FD1D9]" />
+                                 <span className="font-bold text-sm tracking-wide">PAKET #{index + 1}</span>
+                              </div>
+                              <button 
+                                 type="button"
+                                 onClick={() => handleRemovePaket(index)}
+                                 className="text-white/70 hover:text-white hover:bg-white/20 p-1.5 rounded-lg transition-all"
+                              >
+                                 <Trash2 size={16} />
+                              </button>
+                           </div>
+                           
+                           <div className="p-5 space-y-5">
+                              <div>
+                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-1.5 block">Nama Paket</label>
+                                 <input 
+                                    type="text"
+                                    placeholder="Misal: Express"
+                                    value={paket.nama_paket}
+                                    onChange={(e) => handlePaketChange(index, 'nama_paket', e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4FD1D9] focus:ring-4 focus:ring-[#4FD1D9]/10 outline-none text-[#1e3a5f] font-bold transition-all"
+                                 />
+                              </div>
 
-                             <div className="flex gap-4">
-                               <div className="flex-1">
-                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-1">
-                                    <Clock size={12} /> Durasi
-                                 </label>
-                                 <div className="flex items-center mt-1">
-                                    <input 
-                                       type="number"
-                                       placeholder="24"
-                                       value={paket.durasi_jam}
-                                       onChange={(e) => handlePaketChange(index, 'durasi_jam', e.target.value)}
-                                       className="w-full border-b-2 border-slate-200 focus:border-[#4FD1D9] outline-none py-1.5 text-[#1e3a5f] font-bold transition-colors"
-                                    />
-                                    <span className="text-xs font-bold text-slate-400 ml-2">Jam</span>
+                              <div className="flex gap-4">
+                                 <div className="flex-1">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-1.5 flex items-center gap-1">
+                                       <Clock size={12} /> Durasi
+                                    </label>
+                                    <div className="relative">
+                                       <input 
+                                          type="number"
+                                          placeholder="24"
+                                          value={paket.durasi_jam}
+                                          onChange={(e) => handlePaketChange(index, 'durasi_jam', e.target.value)}
+                                          className="w-full pl-4 pr-12 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4FD1D9] focus:ring-4 focus:ring-[#4FD1D9]/10 outline-none text-[#1e3a5f] font-bold transition-all"
+                                       />
+                                       <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-xs font-bold text-slate-400">
+                                          Jam
+                                       </div>
+                                    </div>
                                  </div>
-                               </div>
-                               
-                               <div className="flex-[1.5]">
-                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Biaya Tambahan</label>
-                                 <div className="flex items-center mt-1">
-                                    <span className="text-xs font-bold text-slate-400 mr-2">Rp</span>
-                                    <input 
-                                       type="text"
-                                       placeholder="0"
-                                       value={paket.biaya_tambahan ? formatCurrency(paket.biaya_tambahan) : ''}
-                                       onChange={(e) => handlePaketChange(index, 'biaya_tambahan', e.target.value)}
-                                       className="w-full border-b-2 border-slate-200 focus:border-[#4FD1D9] outline-none py-1.5 text-[#1e3a5f] font-bold transition-colors"
-                                    />
+                                 
+                                 <div className="flex-[1.5]">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-1.5 block">Biaya Tambahan</label>
+                                    <div className="relative">
+                                       <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-sm font-bold text-slate-400">
+                                          Rp
+                                       </div>
+                                       <input 
+                                          type="text"
+                                          placeholder="0"
+                                          value={paket.biaya_tambahan ? formatCurrency(paket.biaya_tambahan) : ''}
+                                          onChange={(e) => handlePaketChange(index, 'biaya_tambahan', e.target.value)}
+                                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#4FD1D9] focus:ring-4 focus:ring-[#4FD1D9]/10 outline-none text-[#1e3a5f] font-bold transition-all"
+                                       />
+                                    </div>
                                  </div>
-                               </div>
-                             </div>
-                          </div>
-                       </div>
-                    ))}
+                              </div>
+                           </div>
+                        </div>
+                     ))}
                  </div>
               )}
           </div>

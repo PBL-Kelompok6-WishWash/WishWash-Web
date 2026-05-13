@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, ClipboardList, Database, Users,
   LogOut, ChevronDown, ChevronRight, Menu, X,
-  Droplets, Tag, CreditCard, Gift, UserCircle, Briefcase
+  Shirt, SprayCan, CreditCard, TicketPercent, UserCircle, Briefcase
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -47,10 +47,10 @@ export default function Sidebar() {
       name: 'Master Data',
       icon: <Database size={20} />,
       subItems: [
-        { name: 'Layanan', path: '/layanan', icon: <Droplets size={16} /> },
-        { name: 'Parfum', path: '/parfum', icon: <Tag size={16} /> },
+        { name: 'Layanan', path: '/layanan', icon: <Shirt size={16} /> },
+        { name: 'Parfum', path: '/parfum', icon: <SprayCan size={16} /> },
         { name: 'Pembayaran', path: '/metode_bayar', icon: <CreditCard size={16} /> },
-        { name: 'Promo', path: '/promo', icon: <Gift size={16} /> },
+        { name: 'Promo', path: '/promo', icon: <TicketPercent size={16} /> },
       ]
     },
     {

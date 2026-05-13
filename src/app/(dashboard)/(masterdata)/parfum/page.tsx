@@ -1,128 +1,337 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Plus,
-  Search,
-  Edit2,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsRight
+  Search, Plus, Edit, Trash2, ChevronUp, ChevronDown,
+  ChevronLeft, ChevronRight,
+  CheckCircle, XCircle, X
 } from 'lucide-react';
+import { parfumService } from '@/services/parfumService';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 
-export default function MasterDataParfumPage() {
-  // Data dummy untuk tabel Parfum
-  const parfums = [
-    {
-      id: 'PRF001',
-      nama: 'Malaikat Subuh',
-      keterangan: 'Wangi enak cihuy wer werr'
-    },
-    {
-      id: 'PRF002',
-      nama: 'Lavender Bliss',
-      keterangan: 'Wewangian menenangkan dengan aroma lavender asli'
-    },
-    {
-      id: 'PRF003',
-      nama: 'Citrus Burst',
-      keterangan: 'Aroma jeruk segar yang memberikan energi'
-    },
-    {
-      id: 'PRF004',
-      nama: 'Fresh Cotton',
-      keterangan: 'Aroma manis seperti permen karet'
-    },
-  ];
+interface Parfum {
+  id_parfum: number;
+  nama_parfum: string;
+  keterangan: string;
+}
+
+export default function ParfumPage() {
+  const [data, setData] = useState<Parfum[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notif, setNotif] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+
+  const pathname = usePathname();
+  useEffect(() => {
+    const savedNotif = sessionStorage.getItem('parfum_notif');
+    if (savedNotif) {
+      setNotif({ message: savedNotif, type: 'success' });
+      sessionStorage.removeItem('parfum_notif'); 
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    if (notif) {
+      const timer = setTimeout(() => setNotif(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [notif]);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({
+    key: 'id_parfum',
+    direction: 'asc'
+  });
+
+  const fetchParfum = async () => {
+    setIsLoading(true);
+    try {
+      const result = await parfumService.getAll();
+      setData(result.data || []);
+    } catch (error) {
+      console.error("Error fetching parfum:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchParfum();
+  }, []);
+
+  const handleDelete = async (id: number, nama: string) => {
+    if (!window.confirm(`Yakin ingin menghapus parfum ${nama}?`)) return;
+
+    try {
+      await parfumService.delete(id);
+      setData(data.filter(item => item.id_parfum !== id));
+      
+      setNotif({ message: `Berhasil menghapus parfum ${nama} (ID: ${id})!`, type: 'success' });
+      
+    } catch (error) {
+      console.error(error);
+      setNotif({ message: `Gagal menghapus parfum ${nama}.`, type: 'error' });
+    }
+  };
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    setSortConfig({ key, direction });
+  };
+
+  const processedData = React.useMemo(() => {
+    let result = [...data];
+
+    if (searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      result = result.filter(item =>
+        (item.nama_parfum || '').toLowerCase().includes(lowerQuery) ||
+        (item.keterangan || '').toLowerCase().includes(lowerQuery)
+      );
+    }
+
+    if (sortConfig.key) {
+      result.sort((a: any, b: any) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        aValue = aValue || '';
+        bValue = bValue || '';
+
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [data, searchQuery, sortConfig]);
+
+  const totalPages = Math.ceil(processedData.length / itemsPerPage);
+  const paginatedData = processedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, itemsPerPage]);
+
+  const renderSortIcon = (columnKey: string) => {
+    const isActive = sortConfig.key === columnKey;
+    const isAsc = isActive && sortConfig.direction === 'asc';
+    const isDesc = isActive && sortConfig.direction === 'desc';
+
+    return (
+      <div className="flex flex-col items-center -space-y-1.5 ml-1">
+        <ChevronUp
+          size={14}
+          strokeWidth={isAsc ? 4 : 2}
+          className={`transition-colors ${isAsc ? 'text-white' : 'text-slate-400/50'}`}
+        />
+        <ChevronDown
+          size={14}
+          strokeWidth={isDesc ? 4 : 2}
+          className={`transition-colors ${isDesc ? 'text-white' : 'text-slate-400/50'}`}
+        />
+      </div>
+    );
+  };
 
   return (
-    <div className="w-full pt-10">
+    <div className="w-full relative">
+      <h2 className="text-3xl font-black text-[#1e3a5f] uppercase mb-8 tracking-wider">
+        Daftar Parfum
+      </h2>
 
-      {/* Main Card Tabel - mt-25 agar konsisten dengan halaman Layanan */}
-      <div className="mt-25 bg-white rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden">
+      {/* AREA NOTIFIKASI */}
+      {notif && (
+        <div className={`mb-6 p-4 rounded-2xl border-l-4 font-bold flex items-center justify-between shadow-lg transition-all duration-500 animate-in fade-in slide-in-from-top-4 ${notif.type === 'success'
+            ? 'bg-emerald-50 border-emerald-500 text-emerald-600'
+            : 'bg-red-50 border-red-500 text-red-600'
+          }`}>
+          <div className="flex items-center gap-3">
+            {notif.type === 'success' ? (
+              <CheckCircle size={22} className="shrink-0" />
+            ) : (
+              <XCircle size={22} className="shrink-0" />
+            )}
+            <p className="text-sm md:text-base">{notif.message}</p>
+          </div>
 
-        {/* Header Tabel */}
-        <div className="p-6 flex justify-between items-center bg-white border-b border-slate-100">
-          <h3 className="text-2xl font-black text-[#1e3a5f]">Daftar Parfum</h3>
+          <button
+            onClick={() => setNotif(null)}
+            className="p-1 hover:bg-black/5 rounded-full transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
 
-          <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 bg-[#123b6b] hover:bg-[#0c284a] text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors">
-              <Plus size={18} />
-              Tambah Parfum Baru
-            </button>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        {/* HEADER TOOLBAR */}
+        <div className="p-6 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="relative w-full sm:w-72">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search size={18} className="text-slate-400" />
+              </div>
               <input
                 type="text"
-                placeholder="Cari Parfum..."
-                className="pl-10 pr-4 py-2 border-2 border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#4FD1D9] w-64 text-[#1e3a5f]"
+                placeholder="Cari parfum..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] text-sm font-medium transition-colors"
               />
             </div>
+
+            <div className="flex items-center gap-2">
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] text-sm font-bold cursor-pointer transition-colors appearance-none bg-white"
+              >
+                {[10, 15, 20, 25].map(num => (
+                  <option key={num} value={num}>{num} Baris</option>
+                ))}
+              </select>
+            </div>
           </div>
+
+          <Link
+            href="/parfum/tambah"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#1e3a5f] hover:bg-[#122640] text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-md shadow-[#1e3a5f]/20"
+          >
+            <Plus size={18} /> Tambah Parfum
+          </Link>
         </div>
 
-        {/* Tabel Parfum */}
+        {/* TABEL DATA */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-[#1e3a5f]">
-            <thead className="bg-[#e2e8f0] text-sm font-bold text-[#1e3a5f]">
-              <tr>
-                <th className="px-6 py-4 flex items-center gap-1">
-                  ID <span className="text-[10px] text-slate-400">▲</span>
+          <table className="w-full text-left border-collapse border-y border-slate-200 min-w-[600px]">
+            <thead>
+              <tr className="bg-[#1e3a5f] text-white text-xs uppercase tracking-widest select-none">
+                <th className="p-4 font-bold text-center w-20 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_parfum')}>
+                  <div className="flex items-center justify-center">
+                    ID
+                    {renderSortIcon('id_parfum')}
+                  </div>
                 </th>
-                <th className="px-6 py-4">Nama Parfum</th>
-                <th className="px-6 py-4">Keterangan</th>
-                <th className="px-6 py-4 text-center">Aksi</th>
+
+                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_parfum')}>
+                  <div className="flex items-center justify-between">
+                    <span>Nama Parfum</span>
+                    {renderSortIcon('nama_parfum')}
+                  </div>
+                </th>
+
+                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('keterangan')}>
+                  <div className="flex items-center justify-between">
+                    <span>Keterangan</span>
+                    {renderSortIcon('keterangan')}
+                  </div>
+                </th>
+
+                <th className="p-4 font-bold text-center w-32 border-x border-white/10">Aksi</th>
               </tr>
             </thead>
-            <tbody>
-              {parfums.map((item, index) => (
-                <tr
-                  key={item.id}
-                  className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${index === parfums.length - 1 ? 'border-none' : ''}`}
-                >
-                  {/* ID */}
-                  <td className="px-6 py-4 text-[#1e3a5f] font-medium">{item.id}</td>
 
-                  {/* Nama Parfum */}
-                  <td className="px-6 py-4 text-[#1e3a5f] font-bold">{item.nama}</td>
-
-                  {/* Keterangan */}
-                  <td className="px-6 py-4 text-[#1e3a5f] max-w-xs italic">{item.keterangan}</td>
-
-                  {/* Action Buttons */}
-                  <td className="px-6 py-4">
-                    <div className="flex justify-center items-center gap-4">
-                      <button className="text-slate-600 hover:text-blue-600 transition-colors">
-                        <Edit2 size={18} strokeWidth={2.5} />
-                      </button>
-                      <button className="text-slate-600 hover:text-red-600 transition-colors">
-                        <Trash2 size={18} strokeWidth={2.5} />
-                      </button>
+            <tbody className="text-sm">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                    <div className="flex justify-center mb-2">
+                      <div className="w-8 h-8 border-4 border-slate-200 border-t-[#4FD1D9] rounded-full animate-spin"></div>
                     </div>
+                    Memuat data...
                   </td>
                 </tr>
-              ))}
+              ) : paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                    {searchQuery ? "Data tidak ditemukan." : "Belum ada data parfum."}
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((row) => (
+                  <tr key={row.id_parfum} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
+                    <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">
+                      {row.id_parfum}
+                    </td>
+                    <td className="p-4 font-bold text-[#1e3a5f] border-x border-slate-200">
+                      {row.nama_parfum}
+                    </td>
+                    <td className="p-4 text-slate-600 font-medium border-x border-slate-200">
+                      {row.keterangan || <span className="text-slate-300 italic">Tidak ada keterangan</span>}
+                    </td>
+                    <td className="p-4 border-x border-slate-200">
+                      <div className="flex items-center justify-center gap-2">
+                        <Link
+                          href={`/parfum/edit/${row.id_parfum}`}
+                          title="Edit"
+                          className="p-2 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
+                        >
+                          <Edit size={16} />
+                        </Link>
+                        <button
+                          title="Hapus"
+                          onClick={() => handleDelete(row.id_parfum, row.nama_parfum)}
+                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Bawah */}
-        <div className="p-4 flex justify-end items-center gap-2 text-[#1e3a5f] bg-white border-t border-slate-200">
-          <button className="p-1 text-slate-400 hover:text-[#1e3a5f] transition-colors">
-            <ChevronLeft size={18} />
-          </button>
-          <button className="w-7 h-7 flex items-center justify-center rounded-md bg-slate-200 text-[#1e3a5f] font-bold text-xs">
-            1
-          </button>
-          <button className="p-1 text-slate-400 hover:text-[#1e3a5f] transition-colors">
-            <ChevronRight size={18} />
-          </button>
-          <button className="p-1 text-slate-400 hover:text-[#1e3a5f] transition-colors">
-            <ChevronsRight size={18} />
-          </button>
-        </div>
+        {/* FOOTER: Pagination */}
+        {!isLoading && processedData.length > 0 && (
+          <div className="p-5 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
+            <p className="text-xs font-bold text-slate-400">
+              Menampilkan <span className="text-[#1e3a5f]">{(currentPage - 1) * itemsPerPage + 1}</span> - <span className="text-[#1e3a5f]">{Math.min(currentPage * itemsPerPage, processedData.length)}</span> dari <span className="text-[#1e3a5f]">{processedData.length}</span> data
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border-2 border-slate-200 text-slate-500 hover:border-[#1e3a5f] hover:text-[#1e3a5f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors ${currentPage === page
+                      ? 'bg-[#1e3a5f] text-white shadow-md'
+                      : 'text-slate-500 hover:bg-slate-200'
+                      }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border-2 border-slate-200 text-slate-500 hover:border-[#1e3a5f] hover:text-[#1e3a5f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
