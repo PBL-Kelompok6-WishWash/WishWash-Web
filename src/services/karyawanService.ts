@@ -1,6 +1,6 @@
-// src/services/pelangganService.ts
+// src/services/karyawanService.ts
 
-const BASE_URL = "http://localhost:8080/api/v1/admin/pelanggan";
+const BASE_URL = "http://localhost:8080/api/v1/admin/karyawan";
 
 // Helper untuk mengambil header + token
 const getAuthHeaders = () => {
@@ -11,14 +11,14 @@ const getAuthHeaders = () => {
   };
 };
 
-export const pelangganService = {
+export const karyawanService = {
   // Ambil semua data
   getAll: async () => {
     const res = await fetch(BASE_URL, {
       method: "GET",
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error("Gagal mengambil data pelanggan");
+    if (!res.ok) throw new Error("Gagal mengambil data karyawan");
     return res.json();
   },
 
@@ -28,7 +28,7 @@ export const pelangganService = {
       method: "DELETE",
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error("Gagal menghapus data pelanggan");
+    if (!res.ok) throw new Error("Gagal menghapus data karyawan");
     return res.json();
   },
 
@@ -39,7 +39,7 @@ export const pelangganService = {
       body: JSON.stringify(data),
     });
     const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal menambah pelanggan");
+    if (!res.ok) throw new Error(result.error || "Gagal menambah karyawan");
     return result;
   },
 
@@ -50,7 +50,7 @@ export const pelangganService = {
       body: JSON.stringify(data),
     });
     const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal mengupdate pelanggan");
+    if (!res.ok) throw new Error(result.error || "Gagal mengupdate karyawan");
     return result;
   },
 

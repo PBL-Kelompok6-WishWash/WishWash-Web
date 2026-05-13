@@ -98,10 +98,10 @@ export default function PelangganPage() {
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       result = result.filter(item =>
-        item.nama_lengkap?.toLowerCase().includes(lowerQuery) ||
-        item.User?.username?.toLowerCase().includes(lowerQuery) ||
-        item.User?.email?.toLowerCase().includes(lowerQuery) ||
-        item.no_telp?.includes(lowerQuery)
+        (item.nama_lengkap || '').toLowerCase().includes(lowerQuery) ||
+        (item.User?.username || '').toLowerCase().includes(lowerQuery) ||
+        (item.User?.email || '').toLowerCase().includes(lowerQuery) ||
+        (item.no_telp || '').toLowerCase().includes(lowerQuery)
       );
     }
 
