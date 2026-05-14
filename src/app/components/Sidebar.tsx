@@ -21,7 +21,7 @@ export default function Sidebar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
-    if (['/layanan', '/parfum', '/metode_bayar', '/promo'].some(path => pathname.startsWith(path))) {
+    if (['/layanan', '/parfum', '/metode-pembayaran', '/promo'].some(path => pathname.startsWith(path))) {
       setIsMasterDataOpen(true);
     }
     if (['/pelanggan', '/karyawan'].some(path => pathname.startsWith(path))) {
@@ -49,7 +49,7 @@ export default function Sidebar() {
       subItems: [
         { name: 'Layanan', path: '/layanan', icon: <Shirt size={16} /> },
         { name: 'Parfum', path: '/parfum', icon: <SprayCan size={16} /> },
-        { name: 'Pembayaran', path: '/metode_bayar', icon: <CreditCard size={16} /> },
+        { name: 'Metode Pembayaran', path: '/metode-pembayaran', icon: <CreditCard size={16} /> },
         { name: 'Daftar Promo', path: '/promo', icon: <TicketPercent size={16} /> },
       ]
     },

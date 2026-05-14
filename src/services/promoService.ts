@@ -26,14 +26,14 @@ export const promoService = {
   getAll: async () => {
     const res = await fetch(BASE_URL, { method: "GET", headers: getAuthHeaders() });
     const result = await res.json();
-    if (!res.ok) throw result;
+    if (!res.ok) throw new Error(result.error || "Gagal mengambil data promo");
     return result;
   },
 
   getById: async (id: number) => {
     const res = await fetch(`${BASE_URL}/${id}`, { method: "GET", headers: getAuthHeaders() });
     const result = await res.json();
-    if (!res.ok) throw result;
+    if (!res.ok) throw new Error(result.error || "Gagal mengambil detail promo");
     return result;
   },
 
@@ -44,7 +44,7 @@ export const promoService = {
       body: JSON.stringify(data),
     });
     const result = await res.json();
-    if (!res.ok) throw result;
+    if (!res.ok) throw new Error(result.error || "Gagal menyimpan promo");
     return result;
   },
 
@@ -55,14 +55,14 @@ export const promoService = {
       body: JSON.stringify(data),
     });
     const result = await res.json();
-    if (!res.ok) throw result;
+    if (!res.ok) throw new Error(result.error || "Gagal memperbarui promo");
     return result;
   },
 
   delete: async (id: number) => {
     const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE", headers: getAuthHeaders() });
     const result = await res.json();
-    if (!res.ok) throw result;
+    if (!res.ok) throw new Error(result.error || "Gagal menghapus promo");
     return result;
   },
 };
