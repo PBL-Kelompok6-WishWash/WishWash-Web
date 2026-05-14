@@ -47,7 +47,7 @@ export default function LayananPage() {
   }, [notif]);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({
@@ -199,7 +199,7 @@ export default function LayananPage() {
                 onChange={(e) => setItemsPerPage(Number(e.target.value))}
                 className="px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] text-sm font-bold cursor-pointer transition-colors appearance-none bg-white"
               >
-                {[10, 15, 20, 25].map(num => (
+                {[5, 10, 25, 50].map(num => (
                   <option key={num} value={num}>{num} Baris</option>
                 ))}
               </select>
