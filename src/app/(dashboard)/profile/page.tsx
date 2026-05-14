@@ -28,7 +28,12 @@ export default function ProfilePage() {
   const [toastMsg, setToastMsg] = useState("");
   
   const avatarTemplates = ["Admin", "Felix", "Aneka", "Mimi", "Jack", "Oliver", "Jasper", "Bella", "Lucky"];
-  const [avatarIndex, setAvatarIndex] = useState(0);
+  const [avatarSeed, setAvatarSeed] = useState("Admin");
+
+  useEffect(() => {
+    const savedSeed = localStorage.getItem("avatar_seed") || "Admin";
+    setAvatarSeed(savedSeed);
+  }, []);
 
   useEffect(() => {
     const savedName = localStorage.getItem("nama_user") || "Admin WishWash";
@@ -44,7 +49,12 @@ export default function ProfilePage() {
   }, []);
 
   const handleSwapAvatar = () => {
-    setAvatarIndex((prev) => (prev + 1) % avatarTemplates.length);
+    const currentIndex = avatarTemplates.indexOf(avatarSeed);
+    const nextIndex = (currentIndex + 1) % avatarTemplates.length;
+    const nextSeed = avatarTemplates[nextIndex];
+    setAvatarSeed(nextSeed);
+    localStorage.setItem("avatar_seed", nextSeed);
+    window.dispatchEvent(new Event("profileUpdated")); // Beritahu Header untuk update
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,7 +94,7 @@ export default function ProfilePage() {
 
     try {
       const token = localStorage.getItem("jwt_token");
-      const response = await fetch("http://localhost:8080/api/v1/protected/password/update", {
+      const response = await fetch("http://localhost:8080/api/v1/profile/password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +140,7 @@ export default function ProfilePage() {
       
       try {
         const token = localStorage.getItem("jwt_token");
-        const response = await fetch("http://localhost:8080/api/v1/protected/profile/update", {
+        const response = await fetch("http://localhost:8080/api/v1/profile/update", {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -179,7 +189,7 @@ export default function ProfilePage() {
           <div className="relative">
             <div className="w-40 h-40 rounded-full border-4 border-[#4FD1D9] overflow-hidden shadow-lg bg-slate-50 transition-all duration-300">
               <img
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarTemplates[avatarIndex]}`}
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  ArrowLeft, Save, SprayCan, AlignLeft
+  ArrowLeft, Save, SprayCan, AlignLeft, ChevronDown
 } from 'lucide-react';
 import { parfumService } from '@/services/parfumService';
 import SplashScreen from '@/app/components/SplashScreen';
@@ -16,7 +16,8 @@ export default function TambahParfumPage() {
   
   const [formData, setFormData] = useState({
     nama_parfum: '',
-    keterangan: ''
+    keterangan: '',
+    status_parfum: 'Tersedia'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,6 +111,23 @@ export default function TambahParfumPage() {
                    rows={4}
                    className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all resize-none"
                  />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Status Parfum</label>
+              <div className="relative">
+                <select 
+                  value={formData.status_parfum}
+                  onChange={(e) => setFormData({...formData, status_parfum: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all appearance-none bg-white"
+                >
+                  <option value="Tersedia">Tersedia</option>
+                  <option value="Tidak Tersedia">Tidak Tersedia</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                  <ChevronDown size={18} />
+                </div>
               </div>
             </div>
 

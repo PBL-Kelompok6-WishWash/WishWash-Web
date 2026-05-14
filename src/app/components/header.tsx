@@ -7,6 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 
 export default function Header() {
     const [username, setUsername] = useState("Admin");
+    const [avatarSeed, setAvatarSeed] = useState("Admin");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     // 💡 State untuk Modal Konfirmasi Logout
@@ -24,6 +25,8 @@ export default function Header() {
             if (savedName) {
                 setUsername(savedName);
             }
+            const savedSeed = localStorage.getItem("avatar_seed") || savedName || "Admin";
+            setAvatarSeed(savedSeed);
         };
 
         fetchUsername();
@@ -81,7 +84,7 @@ export default function Header() {
                         <div className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-colors duration-200 bg-slate-50 group-hover:border-[#4FD1D9] ${isDropdownOpen || isProfilePage ? 'border-[#4FD1D9]' : 'border-slate-100'
                             }`}>
                             <img
-                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`}
+                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`}
                                 alt="Admin"
                                 className="w-full h-full object-cover"
                             />

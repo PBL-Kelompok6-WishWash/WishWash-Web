@@ -324,12 +324,12 @@ export default function KaryawanPage() {
                       {row.plat_nomor || '-'}
                     </td>
                     <td className="p-4 border-x border-slate-200">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap inline-block ${
                         row.status_ketersediaan?.toLowerCase() === 'tersedia' 
-                          ? 'bg-emerald-100 text-emerald-700' 
+                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
                           : row.status_ketersediaan?.toLowerCase() === 'sibuk'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-slate-100 text-slate-700'
+                          ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                          : 'bg-red-100 text-red-700 border border-red-200'
                       }`}>
                         {row.status_ketersediaan || '-'}
                       </span>

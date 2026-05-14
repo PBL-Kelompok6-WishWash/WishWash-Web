@@ -21,6 +21,7 @@ interface Promo {
   tgl_mulai: string;
   tgl_berakhir: string;
   status_promo: string;
+  gambar_promo: string;
 }
 
 const formatCurrency = (val: number) =>
@@ -127,13 +128,13 @@ export default function PromoPage() {
 
   const getStatusBadge = (status: string) => {
     if (status === 'Aktif') return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
-    return 'bg-slate-100 text-slate-500 border border-slate-200';
+    return 'bg-red-100 text-red-700 border border-red-200';
   };
 
   return (
     <div className="w-full relative">
       <h2 className="text-3xl font-black text-[#1e3a5f] uppercase mb-8 tracking-wider">
-        Manajemen Promo
+        Daftar Promo
       </h2>
 
       {notif && (
@@ -189,6 +190,7 @@ export default function PromoPage() {
                 <th className="p-4 font-bold text-center w-16 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_promo')}>
                   <div className="flex items-center justify-center">ID {renderSortIcon('id_promo')}</div>
                 </th>
+                <th className="p-4 font-bold text-center w-24 border-x border-white/10">Gambar</th>
                 <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('kode_promo')}>
                   <div className="flex items-center justify-between">Kode Promo {renderSortIcon('kode_promo')}</div>
                 </th>
@@ -196,26 +198,41 @@ export default function PromoPage() {
                   <div className="flex items-center justify-between">Nama Promo {renderSortIcon('nama_promo')}</div>
                 </th>
                 <th className="p-4 font-bold border-x border-white/10">Tipe & Potongan</th>
-                <th className="p-4 font-bold border-x border-white/10">Min. Order</th>
-                <th className="p-4 font-bold border-x border-white/10">Periode</th>
-                <th className="p-4 font-bold text-center border-x border-white/10">Status</th>
+                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('minimal_order')}>
+                  <div className="flex items-center justify-between">Min. Order {renderSortIcon('minimal_order')}</div>
+                </th>
+                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('tgl_mulai')}>
+                  <div className="flex items-center justify-between">Periode {renderSortIcon('tgl_mulai')}</div>
+                </th>
+                <th className="p-4 font-bold text-center border-x border-white/10 cursor-pointer hover:bg-[#122640] transition-colors" onClick={() => handleSort('status_promo')}>
+                  <div className="flex items-center justify-center">Status {renderSortIcon('status_promo')}</div>
+                </th>
                 <th className="p-4 font-bold text-center w-28 border-x border-white/10">Aksi</th>
               </tr>
             </thead>
             <tbody className="text-sm">
               {isLoading ? (
-                <tr><td colSpan={8} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                <tr><td colSpan={9} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
                   <div className="flex justify-center mb-2"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#4FD1D9] rounded-full animate-spin" /></div>
                   Memuat data...
                 </td></tr>
               ) : paginatedData.length === 0 ? (
-                <tr><td colSpan={8} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                <tr><td colSpan={9} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
                   {searchQuery ? 'Data tidak ditemukan.' : 'Belum ada data promo.'}
                 </td></tr>
               ) : (
                 paginatedData.map(row => (
                   <tr key={row.id_promo} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
                     <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">{row.id_promo}</td>
+                    <td className="p-2 text-center border-x border-slate-200">
+                      <div className="w-20 h-12 mx-auto rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                        {row.gambar_promo ? (
+                          <img src={row.gambar_promo} alt="Promo" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-slate-300"><BadgePercent size={20} /></div>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-4 border-x border-slate-200">
                       <span className="font-black text-[#1e3a5f] tracking-wider uppercase bg-slate-100 px-2 py-1 rounded-md text-xs">
                         {row.kode_promo}
@@ -245,7 +262,7 @@ export default function PromoPage() {
                       </div>
                     </td>
                     <td className="p-4 text-center border-x border-slate-200">
-                      <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${getStatusBadge(row.status_promo)}`}>
+                      <span className={`text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap inline-block ${getStatusBadge(row.status_promo)}`}>
                         {row.status_promo}
                       </span>
                     </td>

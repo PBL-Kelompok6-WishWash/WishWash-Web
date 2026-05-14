@@ -22,6 +22,7 @@ interface Layanan {
   gambar_layanan: string;
   jenis_satuan: string;
   harga_per_satuan: number;
+  status_layanan: string;
   referensi_status: ReferensiStatus[];
 }
 
@@ -149,6 +150,22 @@ export default function LayananPage() {
     );
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Aktif':
+      case 'Tersedia':
+        return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+      case 'Tidak Aktif':
+      case 'Tidak Tersedia':
+      case 'Cuti':
+        return 'bg-red-100 text-red-700 border border-red-200';
+      case 'Sibuk':
+        return 'bg-amber-100 text-amber-700 border border-amber-200';
+      default:
+        return 'bg-slate-100 text-slate-500 border border-slate-200';
+    }
+  };
+
   return (
     <div className="w-full relative">
       <h2 className="text-3xl font-black text-[#1e3a5f] uppercase mb-8 tracking-wider">
@@ -247,6 +264,9 @@ export default function LayananPage() {
                   </div>
                 </th>
 
+                <th className="p-4 font-bold text-center w-28 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('status_layanan')}>
+                  <div className="flex items-center justify-center">Status {renderSortIcon('status_layanan')}</div>
+                </th>
                 <th className="p-4 font-bold text-center w-32 border-x border-white/10">Aksi</th>
               </tr>
             </thead>
@@ -254,7 +274,7 @@ export default function LayananPage() {
             <tbody className="text-sm">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                  <td colSpan={7} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
                     <div className="flex justify-center mb-2">
                       <div className="w-8 h-8 border-4 border-slate-200 border-t-[#4FD1D9] rounded-full animate-spin"></div>
                     </div>
@@ -263,7 +283,7 @@ export default function LayananPage() {
                 </tr>
               ) : paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                  <td colSpan={7} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
                     {searchQuery ? "Data tidak ditemukan." : "Belum ada data layanan."}
                   </td>
                 </tr>
@@ -308,6 +328,11 @@ export default function LayananPage() {
                           )}
                        </div>
                     </td>
+                    <td className="p-4 text-center border-x border-slate-200">
+                        <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap inline-block ${getStatusBadge(row.status_layanan)}`}>
+                          {row.status_layanan}
+                        </span>
+                     </td>
                     <td className="p-4 border-x border-slate-200">
                       <div className="flex items-center justify-center gap-2">
                         <Link

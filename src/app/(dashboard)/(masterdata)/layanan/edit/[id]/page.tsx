@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Plus, Trash2, GripVertical, Save, ClipboardList, Tag, Image as ImageIcon, Package, Clock, X } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, GripVertical, Save, ClipboardList, Tag, Image as ImageIcon, Package, Clock, X, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { layananService } from '@/services/layananService';
@@ -78,7 +78,8 @@ export default function EditLayananPage() {
     nama_layanan: '',
     gambar_layanan: '',
     jenis_satuan: 'Kg',
-    harga_per_satuan: '' 
+    harga_per_satuan: '',
+    status_layanan: 'Aktif'
   });
   
   const [statuses, setStatuses] = useState<{id: string, value: string}[]>([]);
@@ -115,7 +116,8 @@ export default function EditLayananPage() {
           nama_layanan: data.nama_layanan,
           gambar_layanan: data.gambar_layanan || '',
           jenis_satuan: data.jenis_satuan,
-          harga_per_satuan: data.harga_per_satuan.toString()
+          harga_per_satuan: data.harga_per_satuan.toString(),
+          status_layanan: data.status_layanan || 'Aktif'
         });
         
         if (data.gambar_layanan && data.gambar_layanan.startsWith('data:image')) {
@@ -245,6 +247,7 @@ export default function EditLayananPage() {
         gambar_layanan: formData.gambar_layanan,
         jenis_satuan: formData.jenis_satuan,
         harga_per_satuan: parseFloat(formData.harga_per_satuan),
+        status_layanan: formData.status_layanan,
         referensi_status: statuses.map(s => s.value).filter(v => v.trim() !== ""),
         paket_layanan: pakets.map(p => ({
            nama_paket: p.nama_paket || 'Tanpa Nama',
@@ -335,6 +338,23 @@ export default function EditLayananPage() {
                   <option value="Meter">Meter</option>
                   <option value="Pasang">Pasang</option>
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Status Layanan</label>
+                <div className="relative">
+                  <select 
+                    value={formData.status_layanan}
+                    onChange={(e) => setFormData({...formData, status_layanan: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all appearance-none bg-white"
+                  >
+                    <option value="Aktif">Aktif</option>
+                    <option value="Tidak Aktif">Tidak Aktif</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                    <ChevronDown size={18} />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
