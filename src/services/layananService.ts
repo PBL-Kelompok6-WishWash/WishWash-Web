@@ -12,6 +12,7 @@ export interface LayananDTO {
   harga_per_satuan: number;
   referensi_status: string[];
   paket_layanan?: PaketLayananDTO[];
+  status_layanan: string;
 }
 
 const BASE_URL = 'http://localhost:8080/api/v1/admin/layanan';

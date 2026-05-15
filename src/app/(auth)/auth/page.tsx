@@ -48,7 +48,7 @@ export default function LoginPage() {
         size: Math.random() * (120 - 15) + 15, 
         left: Math.random() * 100,
         delay: Math.random() * 15,
-        duration: Math.random() * (25 - 10) + 10,
+        duration: Math.random() * (12 - 5) + 5,
       }));
       setBubbles(newBubbles);
     };

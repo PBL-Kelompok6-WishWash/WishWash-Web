@@ -1,6 +1,7 @@
 export interface ParfumDTO {
   nama_parfum: string;
   keterangan: string;
+  status_parfum: string;
 }
 
 const BASE_URL = 'http://localhost:8080/api/v1/admin/parfum';

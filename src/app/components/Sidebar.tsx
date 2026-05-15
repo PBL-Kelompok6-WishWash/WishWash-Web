@@ -50,7 +50,7 @@ export default function Sidebar() {
         { name: 'Layanan', path: '/layanan', icon: <Shirt size={16} /> },
         { name: 'Parfum', path: '/parfum', icon: <SprayCan size={16} /> },
         { name: 'Metode Pembayaran', path: '/metode-pembayaran', icon: <CreditCard size={16} /> },
-        { name: 'Daftar Promo', path: '/promo', icon: <TicketPercent size={16} /> },
+        { name: 'Promo', path: '/promo', icon: <TicketPercent size={16} /> },
       ]
     },
     {
