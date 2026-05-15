@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, ClipboardList, Database, Users,
   LogOut, ChevronDown, ChevronRight, Menu, X,
-  Shirt, SprayCan, CreditCard, TicketPercent, UserCircle, Briefcase
+  Shirt, SprayCan, CreditCard, TicketPercent, UserCircle, Briefcase, BarChart3
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -43,6 +43,7 @@ export default function Sidebar() {
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
     { name: 'Data Transaksi', icon: <ClipboardList size={20} />, path: '/datatransaksi' },
+    { name: 'Laporan', icon: <BarChart3 size={20} />, path: '/laporan' },
     {
       name: 'Master Data',
       icon: <Database size={20} />,

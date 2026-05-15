@@ -232,7 +232,7 @@ export default function KaryawanPage() {
                   </div>
                 </th>
 
-                <th className="p-4 font-bold text-center w-24 border-x border-white/10">Foto</th>
+                <th className="p-4 font-bold text-center w-32 border-x border-white/10">Foto</th>
 
                 <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_karyawan')}>
                   <div className="flex items-center justify-between">
@@ -296,7 +296,7 @@ export default function KaryawanPage() {
                       {row.id_karyawan}
                     </td>
                     <td className="p-4 flex justify-center border-x border-slate-200">
-                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner">
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner hover:scale-110 transition-transform duration-300">
                         {row.foto_karyawan ? (
                           <img
                             src={row.foto_karyawan}
@@ -307,7 +307,7 @@ export default function KaryawanPage() {
                             }}
                           />
                         ) : (
-                          <ImageIcon size={20} />
+                          <ImageIcon size={28} />
                         )}
                       </div>
                     </td>

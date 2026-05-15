@@ -80,10 +80,13 @@ export default function TambahLayananPage() {
   });
   
   const [statuses, setStatuses] = useState<{id: string, value: string}[]>([
-    { id: 'id-1', value: 'Pickup' },
-    { id: 'id-2', value: 'Wash' },
-    { id: 'id-3', value: 'Delivery' },
-    { id: 'id-4', value: 'Success' },
+    { id: 'id-1', value: 'Pesanan Diterima' },
+    { id: 'id-2', value: 'Penjemputan' },
+    { id: 'id-3', value: 'Proses Timbang' },
+    { id: 'id-4', value: 'Proses Cuci' },
+    { id: 'id-5', value: 'Proses Setrika' },
+    { id: 'id-6', value: 'Siap Diantar' },
+    { id: 'id-7', value: 'Selesai' },
   ]);
 
   const [pakets, setPakets] = useState<{id: string, nama_paket: string, durasi_jam: string, biaya_tambahan: string}[]>([]);

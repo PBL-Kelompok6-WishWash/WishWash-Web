@@ -200,7 +200,7 @@ export default function MetodePembayaranPage() {
                 <th className="p-4 font-bold text-center w-20 border-x border-white/10 cursor-pointer hover:bg-[#122640] transition-colors" onClick={() => handleSort('id_metode_pembayaran')}>
                   <div className="flex items-center justify-center gap-1">ID {renderSortIcon('id_metode_pembayaran')}</div>
                 </th>
-                <th className="p-4 font-bold text-center w-24 border-x border-white/10 text-[10px]">Icon</th>
+                <th className="p-4 font-bold text-center w-32 border-x border-white/10 text-[10px]">Icon</th>
                 <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_metode')}>
                    <div className="flex items-center justify-between"><span>Nama Metode</span>{renderSortIcon('nama_metode')}</div>
                 </th>
@@ -235,10 +235,10 @@ export default function MetodePembayaranPage() {
                   <tr key={row.id_metode_pembayaran} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
                     <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">{row.id_metode_pembayaran}</td>
                     <td className="p-4 border-x border-slate-200">
-                      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto overflow-hidden border border-slate-200 shadow-inner">
+                      <div className="w-20 h-20 rounded-xl bg-slate-100 flex items-center justify-center mx-auto overflow-hidden border border-slate-200 shadow-inner">
                         {row.gambar_metode ? (
-                          <img src={row.gambar_metode} alt={row.nama_metode} className="w-full h-full object-contain p-1" />
-                        ) : <CreditCard size={20} className="text-slate-300" />}
+                          <img src={row.gambar_metode} alt={row.nama_metode} className="w-full h-full object-contain p-2" />
+                        ) : <CreditCard size={28} className="text-slate-300" />}
                       </div>
                     </td>
                     <td className="p-4 font-bold text-[#1e3a5f] border-x border-slate-200">{row.nama_metode}</td>

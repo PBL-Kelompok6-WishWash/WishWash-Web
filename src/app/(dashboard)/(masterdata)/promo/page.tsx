@@ -190,7 +190,7 @@ export default function PromoPage() {
                 <th className="p-4 font-bold text-center w-16 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_promo')}>
                   <div className="flex items-center justify-center">ID {renderSortIcon('id_promo')}</div>
                 </th>
-                <th className="p-4 font-bold text-center w-24 border-x border-white/10">Gambar</th>
+                <th className="p-4 font-bold text-center w-40 border-x border-white/10 text-[10px]">Gambar Promo</th>
                 <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('kode_promo')}>
                   <div className="flex items-center justify-between">Kode Promo {renderSortIcon('kode_promo')}</div>
                 </th>
@@ -225,11 +225,11 @@ export default function PromoPage() {
                   <tr key={row.id_promo} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
                     <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">{row.id_promo}</td>
                     <td className="p-2 text-center border-x border-slate-200">
-                      <div className="w-20 h-12 mx-auto rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                      <div className="w-32 h-20 mx-auto rounded-xl overflow-hidden bg-slate-100 border-2 border-slate-200 flex items-center justify-center shadow-inner">
                         {row.gambar_promo ? (
                           <img src={row.gambar_promo} alt="Promo" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="text-slate-300"><BadgePercent size={20} /></div>
+                          <div className="text-slate-300"><BadgePercent size={28} /></div>
                         )}
                       </div>
                     </td>
