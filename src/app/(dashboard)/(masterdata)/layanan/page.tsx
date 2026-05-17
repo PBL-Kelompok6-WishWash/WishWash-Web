@@ -24,6 +24,28 @@ interface Layanan {
   harga_per_satuan: number;
   status_layanan: string;
   referensi_status: ReferensiStatus[];
+  warna_layanan: string;
+}
+
+function LayananImage({ src, alt }: { src: string; alt: string }) {
+  const [error, setError] = useState(false);
+  const isValid = src && (src.startsWith('data:image') || src.startsWith('http') || src.startsWith('assets/'));
+
+  if (!isValid || error) {
+    return <ImageIcon size={28} className="text-slate-300" />;
+  }
+
+  // Prepend slash to load mobile path from web public assets directory
+  const displaySrc = src.startsWith('assets/') ? `/${src}` : src;
+
+  return (
+    <img
+      src={displaySrc}
+      alt={alt}
+      className="w-full h-full object-cover"
+      onError={() => setError(true)}
+    />
+  );
 }
 
 export default function LayananPage() {
@@ -295,22 +317,18 @@ export default function LayananPage() {
                     </td>
                     <td className="p-4 flex justify-center border-x border-slate-200">
                       <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner">
-                        {row.gambar_layanan ? (
-                          <img
-                            src={row.gambar_layanan}
-                            alt={row.nama_layanan}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = 'https://via.placeholder.com/150';
-                            }}
-                          />
-                        ) : (
-                          <ImageIcon size={28} />
-                        )}
+                        <LayananImage src={row.gambar_layanan} alt={row.nama_layanan} />
                       </div>
                     </td>
                     <td className="p-4 font-bold text-[#1e3a5f] border-x border-slate-200">
-                      {row.nama_layanan}
+                      <div className="flex items-center gap-2">
+                        <span 
+                          className="w-4 h-4 rounded-full border border-slate-300 shrink-0 shadow-sm" 
+                          style={{ backgroundColor: row.warna_layanan || '#00BCD4' }}
+                          title={row.warna_layanan}
+                        />
+                        <span>{row.nama_layanan}</span>
+                      </div>
                     </td>
                     <td className="p-4 font-medium text-slate-700 border-x border-slate-200">
                       Rp {row.harga_per_satuan.toLocaleString('id-ID')} <span className="text-slate-400">/ {row.jenis_satuan}</span>

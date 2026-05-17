@@ -76,7 +76,8 @@ export default function TambahLayananPage() {
     gambar_layanan: '',
     jenis_satuan: 'Kg',
     harga_per_satuan: '',
-    status_layanan: 'Aktif'
+    status_layanan: 'Aktif',
+    warna_layanan: '#00BCD4' // Default to Cyan
   });
   
   const [statuses, setStatuses] = useState<{id: string, value: string}[]>([
@@ -91,6 +92,34 @@ export default function TambahLayananPage() {
 
   const [pakets, setPakets] = useState<{id: string, nama_paket: string, durasi_jam: string, biaya_tambahan: string}[]>([]);
   const [preview, setPreview] = useState<string | null>(null);
+
+  const DEFAULT_COLORS = ['#00BCD4', '#8BC34A', '#9C27B0', '#FFC107'];
+  const [presetColors, setPresetColors] = useState<string[]>(DEFAULT_COLORS);
+
+  const [tempColor, setTempColor] = useState('#00BCD4');
+
+  const handleCustomColorChange = (color: string) => {
+    if (/^#[0-9A-F]{6}$/i.test(color)) {
+      setFormData(prev => ({ ...prev, warna_layanan: color }));
+      const hex = color.toUpperCase();
+      if (!presetColors.map(c => c.toUpperCase()).includes(hex)) {
+        setPresetColors(prev => [...prev, color]);
+      }
+    } else {
+      alert("Format warna tidak valid! Gunakan format HEX (e.g. #FF0000)");
+    }
+  };
+
+  const removePresetColor = (colorToRemove: string) => {
+    if (DEFAULT_COLORS.includes(colorToRemove)) return;
+    setPresetColors(prev => prev.filter(c => c !== colorToRemove));
+    setFormData(prev => {
+      if (prev.warna_layanan === colorToRemove) {
+        return { ...prev, warna_layanan: DEFAULT_COLORS[0] };
+      }
+      return prev;
+    });
+  };
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -203,6 +232,7 @@ export default function TambahLayananPage() {
         jenis_satuan: formData.jenis_satuan,
         harga_per_satuan: parseFloat(formData.harga_per_satuan),
         status_layanan: formData.status_layanan,
+        warna_layanan: formData.warna_layanan,
         referensi_status: statuses.map(s => s.value).filter(v => v.trim() !== ""),
         paket_layanan: pakets.map(p => ({
            nama_paket: p.nama_paket || 'Tanpa Nama',
@@ -322,6 +352,67 @@ export default function TambahLayananPage() {
                     placeholder="10.000" 
                     className="flex-1 px-4 py-3 rounded-r-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Warna Layanan (Identitas)</label>
+                <div className="flex flex-wrap items-center gap-3">
+                  {presetColors.map((color) => {
+                    const isDefault = DEFAULT_COLORS.includes(color);
+                    const isSelected = formData.warna_layanan.toUpperCase() === color.toUpperCase();
+                    return (
+                      <div key={color} className="relative group">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, warna_layanan: color })}
+                          className={`w-8 h-8 rounded-full border-2 transition-all active:scale-90 ${
+                            isSelected ? 'border-[#1e3a5f] scale-110 shadow-md ring-2 ring-[#4FD1D9]/20' : 'border-slate-200'
+                          }`}
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                        {!isDefault && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removePresetColor(color);
+                            }}
+                            className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-all scale-0 group-hover:scale-100 active:scale-90"
+                            style={{ width: '18px', height: '18px', fontSize: '9px' }}
+                            title="Hapus Warna"
+                          >
+                            <X size={10} strokeWidth={3} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="flex items-center gap-2 ml-2 pl-3 border-l border-slate-200">
+                    <input 
+                      type="color" 
+                      value={tempColor}
+                      onChange={(e) => setTempColor(e.target.value)}
+                      className="w-8 h-8 rounded cursor-pointer border border-slate-200 bg-transparent p-0 overflow-hidden"
+                    />
+                    <input
+                      type="text"
+                      value={tempColor}
+                      onChange={(e) => setTempColor(e.target.value)}
+                      placeholder="#FF0000"
+                      className="w-20 px-2 py-1 text-xs font-bold border border-slate-200 rounded text-slate-700 bg-slate-50 uppercase focus:outline-none focus:border-[#4FD1D9]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCustomColorChange(tempColor)}
+                      className="p-1.5 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#122640] transition-colors shadow-sm flex items-center justify-center shrink-0 active:scale-95 border border-[#1e3a5f]"
+                      title="Tambah ke Preset"
+                    >
+                      <Plus size={14} strokeWidth={3} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
