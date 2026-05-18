@@ -37,9 +37,13 @@ export default function LoginPage() {
   useEffect(() => {
     document.title = "Sign In - WishWash";
     const savedUsername = localStorage.getItem("remembered_username");
+    const savedPassword = localStorage.getItem("remembered_password");
     if (savedUsername) {
       setUsername(savedUsername);
       setRememberMe(true);
+      if (savedPassword) {
+        setPassword(savedPassword);
+      }
     }
 
     const generateBubbles = () => {
@@ -73,8 +77,10 @@ export default function LoginPage() {
         }
         if (rememberMe) {
           localStorage.setItem("remembered_username", username);
+          localStorage.setItem("remembered_password", password);
         } else {
           localStorage.removeItem("remembered_username");
+          localStorage.removeItem("remembered_password");
         }
         // Kita kasih delay dikit ke dashboard biar splash screen-nya sempat dinikmati matanya
         setTimeout(() => {

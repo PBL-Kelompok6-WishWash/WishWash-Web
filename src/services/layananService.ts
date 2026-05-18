@@ -32,8 +32,9 @@ export const layananService = {
       method: "GET",
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error("Gagal mengambil data layanan");
-    return res.json();
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(result.error || "Gagal mengambil data layanan");
+    return result;
   },
 
   getById: async (id: number) => {
