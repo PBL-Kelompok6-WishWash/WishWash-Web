@@ -149,15 +149,15 @@ export default function MetodePembayaranPage() {
       </h2>
 
       {notif && (
-        <div className={`mb-6 p-4 rounded-2xl border-l-4 font-bold flex items-center justify-between shadow-lg transition-all duration-500 animate-in fade-in slide-in-from-top-4 ${
+        <div className={`mb-6 py-3 px-4 rounded-xl border-l-4 font-medium flex items-center justify-between shadow-md transition-all duration-500 animate-in fade-in slide-in-from-top-4 ${
           notif.type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-600' : 'bg-red-50 border-red-500 text-red-600'
         }`}>
-          <div className="flex items-center gap-3">
-            {notif.type === 'success' ? <CheckCircle size={22} /> : <XCircle size={22} />}
-            <p className="text-sm md:text-base">{notif.message}</p>
+          <div className="flex items-center gap-2.5">
+            {notif.type === 'success' ? <CheckCircle size={18} /> : <XCircle size={18} />}
+            <p className="text-xs sm:text-sm font-semibold">{notif.message}</p>
           </div>
           <button onClick={() => setNotif(null)} className="p-1 hover:bg-black/5 rounded-full transition-colors">
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
       )}
