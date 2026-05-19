@@ -32,6 +32,7 @@ export default function KaryawanPage() {
   const [data, setData] = useState<Karyawan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notif, setNotif] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ src: string, alt: string } | null>(null);
 
   const pathname = usePathname();
   useEffect(() => {
@@ -224,56 +225,56 @@ export default function KaryawanPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse border-y border-slate-200 min-w-[1000px]">
             <thead>
-              <tr className="bg-[#1e3a5f] text-white text-xs uppercase tracking-widest select-none">
-                <th className="p-4 font-bold text-center w-20 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_karyawan')}>
+              <tr className="bg-[#1e3a5f] text-white text-[11px] uppercase tracking-wider select-none">
+                <th className="py-2.5 px-3 font-bold text-center w-16 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_karyawan')}>
                   <div className="flex items-center justify-center">
                     ID
                     {renderSortIcon('id_karyawan')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold text-center w-32 border-x border-white/10">Foto</th>
+                <th className="py-2.5 px-3 font-bold text-center w-24 border-x border-white/10">Foto</th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_karyawan')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_karyawan')}>
                   <div className="flex items-center justify-between">
                     <span>Nama Karyawan</span>
                     {renderSortIcon('nama_karyawan')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('User.username')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('User.username')}>
                   <div className="flex items-center justify-between">
                     <span>Username</span>
                     {renderSortIcon('User.username')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('no_telp')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('no_telp')}>
                   <div className="flex items-center justify-between">
                     <span>No. Telp</span>
                     {renderSortIcon('no_telp')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('plat_nomor')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('plat_nomor')}>
                   <div className="flex items-center justify-between">
                     <span>Plat Nomor</span>
                     {renderSortIcon('plat_nomor')}
                   </div>
                 </th>
                 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('status_ketersediaan')}>
-                  <div className="flex items-center justify-between">
-                    <span>Status</span>
+                <th className="py-2.5 px-3 font-bold text-center w-28 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('status_ketersediaan')}>
+                  <div className="flex items-center justify-center">
+                    Status
                     {renderSortIcon('status_ketersediaan')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold text-center w-32 border-x border-white/10">Aksi</th>
+                <th className="py-2.5 px-3 font-bold text-center w-28 border-x border-white/10">Aksi</th>
               </tr>
             </thead>
 
-            <tbody className="text-sm">
+            <tbody className="text-xs">
               {isLoading ? (
                 <tr>
                   <td colSpan={8} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
@@ -292,11 +293,18 @@ export default function KaryawanPage() {
               ) : (
                 paginatedData.map((row) => (
                   <tr key={row.id_karyawan} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
-                    <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">
+                    <td className="py-2 px-3 text-center font-bold text-slate-400 border-x border-slate-200">
                       {row.id_karyawan}
                     </td>
-                    <td className="p-4 flex justify-center border-x border-slate-200">
-                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner hover:scale-110 transition-transform duration-300">
+                    <td className="py-2 px-3 flex justify-center border-x border-slate-200">
+                      <div 
+                        onClick={() => {
+                          if (row.foto_karyawan) {
+                            setPreviewImage({ src: row.foto_karyawan, alt: row.nama_karyawan });
+                          }
+                        }}
+                        className={`w-12 h-12 rounded-full overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner transition-all hover:scale-105 duration-300 ${row.foto_karyawan ? 'cursor-pointer hover:opacity-80' : ''}`}
+                      >
                         {row.foto_karyawan ? (
                           <img
                             src={row.foto_karyawan}
@@ -307,24 +315,24 @@ export default function KaryawanPage() {
                             }}
                           />
                         ) : (
-                          <ImageIcon size={28} />
+                          <ImageIcon size={18} />
                         )}
                       </div>
                     </td>
-                    <td className="p-4 font-bold text-[#1e3a5f] capitalize border-x border-slate-200">
+                    <td className="py-2 px-3 font-bold text-[#1e3a5f] capitalize border-x border-slate-200">
                       {row.nama_karyawan}
                     </td>
-                    <td className="p-4 font-medium text-slate-700 border-x border-slate-200">
+                    <td className="py-2 px-3 font-medium text-slate-700 border-x border-slate-200">
                       {row.User?.username || '-'}
                     </td>
-                    <td className="p-4 font-medium text-slate-600 border-x border-slate-200">
+                    <td className="py-2 px-3 font-medium text-slate-600 border-x border-slate-200">
                       {row.no_telp || '-'}
                     </td>
-                    <td className="p-4 font-medium text-slate-600 border-x border-slate-200 uppercase">
+                    <td className="py-2 px-3 font-medium text-slate-600 border-x border-slate-200 uppercase">
                       {row.plat_nomor || '-'}
                     </td>
-                    <td className="p-4 border-x border-slate-200">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap inline-block ${
+                    <td className="py-2 px-3 text-center border-x border-slate-200">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap inline-block ${
                         row.status_ketersediaan?.toLowerCase() === 'tersedia' 
                           ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
                           : row.status_ketersediaan?.toLowerCase() === 'sibuk'
@@ -334,21 +342,21 @@ export default function KaryawanPage() {
                         {row.status_ketersediaan || '-'}
                       </span>
                     </td>
-                    <td className="p-4 border-x border-slate-200">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="py-2 px-3 border-x border-slate-200">
+                      <div className="flex items-center justify-center gap-1.5">
                         <Link
                           href={`/karyawan/edit/${row.id_karyawan}`}
                           title="Edit"
-                          className="p-2 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
+                          className="p-1.5 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
                         >
-                          <Edit size={16} />
+                          <Edit size={14} />
                         </Link>
                         <button
                           title="Hapus"
                           onClick={() => handleDelete(row.id_karyawan, row.nama_karyawan)}
-                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
+                          className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -401,6 +409,33 @@ export default function KaryawanPage() {
         )}
 
       </div>
+
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-300 animate-in fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+            onClick={() => setPreviewImage(null)}
+          >
+            <X size={24} />
+          </button>
+          <div 
+            className="relative max-w-4xl max-h-[85vh] p-2 bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={previewImage.src} 
+              alt={previewImage.alt} 
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+            <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold py-2 px-3 rounded-lg text-center">
+              {previewImage.alt}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

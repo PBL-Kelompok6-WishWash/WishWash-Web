@@ -23,6 +23,7 @@ export default function MetodePembayaranPage() {
   const [data, setData] = useState<MetodePembayaran[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notif, setNotif] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ src: string, alt: string } | null>(null);
 
   const pathname = usePathname();
   useEffect(() => {
@@ -196,27 +197,27 @@ export default function MetodePembayaranPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse border-y border-slate-200 min-w-[800px]">
             <thead>
-              <tr className="bg-[#1e3a5f] text-white text-xs uppercase tracking-widest select-none">
-                <th className="p-4 font-bold text-center w-20 border-x border-white/10 cursor-pointer hover:bg-[#122640] transition-colors" onClick={() => handleSort('id_metode_pembayaran')}>
+              <tr className="bg-[#1e3a5f] text-white text-[11px] uppercase tracking-wider select-none">
+                <th className="py-2.5 px-3 font-bold text-center w-16 border-x border-white/10 cursor-pointer hover:bg-[#122640] transition-colors" onClick={() => handleSort('id_metode_pembayaran')}>
                   <div className="flex items-center justify-center gap-1">ID {renderSortIcon('id_metode_pembayaran')}</div>
                 </th>
-                <th className="p-4 font-bold text-center w-32 border-x border-white/10 text-[10px]">Icon</th>
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_metode')}>
+                <th className="py-2.5 px-3 font-bold text-center w-24 border-x border-white/10 text-[10px]">Icon</th>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_metode')}>
                    <div className="flex items-center justify-between"><span>Nama Metode</span>{renderSortIcon('nama_metode')}</div>
                 </th>
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('tipe_metode')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('tipe_metode')}>
                    <div className="flex items-center justify-between"><span>Tipe</span>{renderSortIcon('tipe_metode')}</div>
                 </th>
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('kode_metode')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('kode_metode')}>
                    <div className="flex items-center justify-between"><span>Kode Gateway</span>{renderSortIcon('kode_metode')}</div>
                 </th>
-                <th className="p-4 font-bold text-center w-28 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('status_metode')}>
+                <th className="py-2.5 px-3 font-bold text-center w-24 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('status_metode')}>
                    <div className="flex items-center justify-center">Status {renderSortIcon('status_metode')}</div>
                 </th>
-                <th className="p-4 font-bold text-center w-32 border-x border-white/10">Aksi</th>
+                <th className="py-2.5 px-3 font-bold text-center w-28 border-x border-white/10">Aksi</th>
               </tr>
             </thead>
-            <tbody className="text-sm">
+            <tbody className="text-xs">
               {isLoading ? (
                 <tr>
                   <td colSpan={7} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
@@ -233,32 +234,39 @@ export default function MetodePembayaranPage() {
               ) : (
                 paginatedData.map((row) => (
                   <tr key={row.id_metode_pembayaran} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
-                    <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">{row.id_metode_pembayaran}</td>
-                    <td className="p-4 border-x border-slate-200">
-                      <div className="w-20 h-20 rounded-xl bg-slate-100 flex items-center justify-center mx-auto overflow-hidden border border-slate-200 shadow-inner">
+                    <td className="py-2 px-3 text-center font-bold text-slate-400 border-x border-slate-200">{row.id_metode_pembayaran}</td>
+                    <td className="py-2 px-3 border-x border-slate-200">
+                      <div 
+                        onClick={() => {
+                          if (row.gambar_metode) {
+                            setPreviewImage({ src: row.gambar_metode, alt: row.nama_metode });
+                          }
+                        }}
+                        className={`w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center mx-auto overflow-hidden border border-slate-200 shadow-inner transition-all hover:scale-105 duration-300 ${row.gambar_metode ? 'cursor-pointer hover:opacity-80' : ''}`}
+                      >
                         {row.gambar_metode ? (
-                          <img src={row.gambar_metode} alt={row.nama_metode} className="w-full h-full object-contain p-2" />
-                        ) : <CreditCard size={28} className="text-slate-300" />}
+                          <img src={row.gambar_metode} alt={row.nama_metode} className="w-full h-full object-contain p-1" />
+                        ) : <CreditCard size={18} className="text-slate-300" />}
                       </div>
                     </td>
-                    <td className="p-4 font-bold text-[#1e3a5f] border-x border-slate-200">{row.nama_metode}</td>
-                    <td className="p-4 border-x border-slate-200 font-medium">
-                      <span className={`px-2 py-1 rounded-lg text-[10px] uppercase font-black ${
+                    <td className="py-2 px-3 font-bold text-[#1e3a5f] border-x border-slate-200">{row.nama_metode}</td>
+                    <td className="py-2 px-3 border-x border-slate-200 font-medium">
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase font-black ${
                         row.tipe_metode === 'Midtrans' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-600'
                       }`}>
                         {row.tipe_metode}
                       </span>
                     </td>
-                    <td className="p-4 border-x border-slate-200 font-mono text-xs font-bold text-slate-500">{row.kode_metode}</td>
-                    <td className="p-4 text-center border-x border-slate-200">
-                      <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap inline-block ${getStatusBadge(row.status_metode)}`}>
+                    <td className="py-2 px-3 border-x border-slate-200 font-mono text-[11px] font-bold text-slate-500">{row.kode_metode}</td>
+                    <td className="py-2 px-3 text-center border-x border-slate-200">
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap inline-block ${getStatusBadge(row.status_metode)}`}>
                         {row.status_metode}
                       </span>
                     </td>
-                    <td className="p-4 border-x border-slate-200">
-                      <div className="flex items-center justify-center gap-2">
-                        <Link href={`/metode-pembayaran/edit/${row.id_metode_pembayaran}`} className="p-2 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"><Edit size={16} /></Link>
-                        <button onClick={() => handleDelete(row.id_metode_pembayaran, row.nama_metode)} className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"><Trash2 size={16} /></button>
+                    <td className="py-2 px-3 border-x border-slate-200">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Link href={`/metode-pembayaran/edit/${row.id_metode_pembayaran}`} className="p-1.5 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"><Edit size={14} /></Link>
+                        <button onClick={() => handleDelete(row.id_metode_pembayaran, row.nama_metode)} className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
@@ -285,6 +293,33 @@ export default function MetodePembayaranPage() {
           </div>
         )}
       </div>
+
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-300 animate-in fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+            onClick={() => setPreviewImage(null)}
+          >
+            <X size={24} />
+          </button>
+          <div 
+            className="relative max-w-4xl max-h-[85vh] p-2 bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={previewImage.src} 
+              alt={previewImage.alt} 
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+            <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold py-2 px-3 rounded-lg text-center">
+              {previewImage.alt}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -29,6 +29,7 @@ export default function PelangganPage() {
   const [data, setData] = useState<Pelanggan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notif, setNotif] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ src: string, alt: string } | null>(null);
 
   const pathname = usePathname();
   useEffect(() => {
@@ -226,50 +227,49 @@ export default function PelangganPage() {
           {/*  Tambahan border untuk keseluruhan tabel */}
           <table className="w-full text-left border-collapse border-y border-slate-200 min-w-[800px]">
             <thead>
-              <tr className="bg-[#1e3a5f] text-white text-xs uppercase tracking-widest select-none">
-                {/*  Tambahan border-x border-white/10 untuk garis vertikal di header */}
-                <th className="p-4 font-bold text-center w-20 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_pelanggan')}>
+              <tr className="bg-[#1e3a5f] text-white text-[11px] uppercase tracking-wider select-none">
+                <th className="py-2.5 px-3 font-bold text-center w-16 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_pelanggan')}>
                   <div className="flex items-center justify-center">
                     ID
                     {renderSortIcon('id_pelanggan')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold text-center w-32 border-x border-white/10">Foto</th>
+                <th className="py-2.5 px-3 font-bold text-center w-24 border-x border-white/10">Foto</th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_lengkap')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_lengkap')}>
                   <div className="flex items-center justify-between">
                     <span>Nama Lengkap</span>
                     {renderSortIcon('nama_lengkap')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('User.username')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('User.username')}>
                   <div className="flex items-center justify-between">
                     <span>Username</span>
                     {renderSortIcon('User.username')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('User.email')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('User.email')}>
                   <div className="flex items-center justify-between">
                     <span>Email</span>
                     {renderSortIcon('User.email')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('no_telp')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('no_telp')}>
                   <div className="flex items-center justify-between">
                     <span>No. Telp</span>
                     {renderSortIcon('no_telp')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold text-center w-32 border-x border-white/10">Aksi</th>
+                <th className="py-2.5 px-3 font-bold text-center w-28 border-x border-white/10">Aksi</th>
               </tr>
             </thead>
 
-            <tbody className="text-sm">
+            <tbody className="text-xs">
               {isLoading ? (
                 <tr>
                   <td colSpan={7} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
@@ -288,12 +288,18 @@ export default function PelangganPage() {
               ) : (
                 paginatedData.map((row) => (
                   <tr key={row.id_pelanggan} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
-                    {/*  Tambahan border-x border-slate-200 di setiap sel td */}
-                    <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">
+                    <td className="py-2 px-3 text-center font-bold text-slate-400 border-x border-slate-200">
                       {row.id_pelanggan}
                     </td>
-                    <td className="p-4 flex justify-center border-x border-slate-200">
-                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner hover:scale-110 transition-transform duration-300">
+                    <td className="py-2 px-3 flex justify-center border-x border-slate-200">
+                      <div 
+                        onClick={() => {
+                          if (row.foto_pelanggan) {
+                            setPreviewImage({ src: row.foto_pelanggan, alt: row.nama_lengkap });
+                          }
+                        }}
+                        className={`w-12 h-12 rounded-full overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner transition-all hover:scale-105 duration-300 ${row.foto_pelanggan ? 'cursor-pointer hover:opacity-80' : ''}`}
+                      >
                         {row.foto_pelanggan ? (
                           <img
                             src={row.foto_pelanggan}
@@ -304,37 +310,37 @@ export default function PelangganPage() {
                             }}
                           />
                         ) : (
-                          <ImageIcon size={28} />
+                          <ImageIcon size={18} />
                         )}
                       </div>
                     </td>
-                    <td className="p-4 font-bold text-[#1e3a5f] capitalize border-x border-slate-200">
+                    <td className="py-2 px-3 font-bold text-[#1e3a5f] capitalize border-x border-slate-200">
                       {row.nama_lengkap}
                     </td>
-                    <td className="p-4 font-medium text-slate-700 border-x border-slate-200">
+                    <td className="py-2 px-3 font-medium text-slate-700 border-x border-slate-200">
                       {row.User?.username || '-'}
                     </td>
-                    <td className="p-4 text-slate-600 font-medium border-x border-slate-200">
+                    <td className="py-2 px-3 text-slate-600 font-medium border-x border-slate-200">
                       {row.User?.email || '-'}
                     </td>
-                    <td className="p-4 font-medium text-slate-600 border-x border-slate-200">
+                    <td className="py-2 px-3 font-medium text-slate-600 border-x border-slate-200">
                       {row.no_telp || '-'}
                     </td>
-                    <td className="p-4 border-x border-slate-200">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="py-2 px-3 border-x border-slate-200">
+                      <div className="flex items-center justify-center gap-1.5">
                         <Link
                           href={`/pelanggan/edit/${row.id_pelanggan}`}
                           title="Edit"
-                          className="p-2 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
+                          className="p-1.5 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
                         >
-                          <Edit size={16} />
+                          <Edit size={14} />
                         </Link>
                         <button
                           title="Hapus"
                           onClick={() => handleDelete(row.id_pelanggan, row.nama_lengkap)}
-                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
+                          className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -388,6 +394,33 @@ export default function PelangganPage() {
         )}
 
       </div>
+
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-300 animate-in fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+            onClick={() => setPreviewImage(null)}
+          >
+            <X size={24} />
+          </button>
+          <div 
+            className="relative max-w-4xl max-h-[85vh] p-2 bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={previewImage.src} 
+              alt={previewImage.alt} 
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+            <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold py-2 px-3 rounded-lg text-center">
+              {previewImage.alt}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

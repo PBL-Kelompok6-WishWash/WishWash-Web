@@ -36,6 +36,7 @@ export default function PromoPage() {
   const [data, setData] = useState<Promo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notif, setNotif] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ src: string, alt: string } | null>(null);
 
   const pathname = usePathname();
   useEffect(() => {
@@ -186,31 +187,31 @@ export default function PromoPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse border-y border-slate-200 min-w-[1100px]">
             <thead>
-              <tr className="bg-[#1e3a5f] text-white text-xs uppercase tracking-widest select-none">
-                <th className="p-4 font-bold text-center w-16 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_promo')}>
+              <tr className="bg-[#1e3a5f] text-white text-[11px] uppercase tracking-wider select-none">
+                <th className="py-2.5 px-3 font-bold text-center w-16 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_promo')}>
                   <div className="flex items-center justify-center">ID {renderSortIcon('id_promo')}</div>
                 </th>
-                <th className="p-4 font-bold text-center w-40 border-x border-white/10 text-[10px]">Gambar Promo</th>
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('kode_promo')}>
+                <th className="py-2.5 px-3 font-bold text-center w-28 border-x border-white/10 text-[10px]">Gambar Promo</th>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('kode_promo')}>
                   <div className="flex items-center justify-between">Kode Promo {renderSortIcon('kode_promo')}</div>
                 </th>
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_promo')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_promo')}>
                   <div className="flex items-center justify-between">Nama Promo {renderSortIcon('nama_promo')}</div>
                 </th>
-                <th className="p-4 font-bold border-x border-white/10">Tipe & Potongan</th>
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('minimal_order')}>
+                <th className="py-2.5 px-3 font-bold border-x border-white/10">Tipe & Potongan</th>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('minimal_order')}>
                   <div className="flex items-center justify-between">Min. Order {renderSortIcon('minimal_order')}</div>
                 </th>
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('tgl_mulai')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('tgl_mulai')}>
                   <div className="flex items-center justify-between">Periode {renderSortIcon('tgl_mulai')}</div>
                 </th>
-                <th className="p-4 font-bold text-center border-x border-white/10 cursor-pointer hover:bg-[#122640] transition-colors" onClick={() => handleSort('status_promo')}>
+                <th className="py-2.5 px-3 font-bold text-center border-x border-white/10 cursor-pointer hover:bg-[#122640] transition-colors" onClick={() => handleSort('status_promo')}>
                   <div className="flex items-center justify-center">Status {renderSortIcon('status_promo')}</div>
                 </th>
-                <th className="p-4 font-bold text-center w-28 border-x border-white/10">Aksi</th>
+                <th className="py-2.5 px-3 font-bold text-center w-24 border-x border-white/10">Aksi</th>
               </tr>
             </thead>
-            <tbody className="text-sm">
+            <tbody className="text-xs">
               {isLoading ? (
                 <tr><td colSpan={9} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
                   <div className="flex justify-center mb-2"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#4FD1D9] rounded-full animate-spin" /></div>
@@ -223,64 +224,71 @@ export default function PromoPage() {
               ) : (
                 paginatedData.map(row => (
                   <tr key={row.id_promo} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
-                    <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">{row.id_promo}</td>
-                    <td className="p-2 text-center border-x border-slate-200">
-                      <div className="w-32 h-20 mx-auto rounded-xl overflow-hidden bg-slate-100 border-2 border-slate-200 flex items-center justify-center shadow-inner">
+                    <td className="py-2 px-3 text-center font-bold text-slate-400 border-x border-slate-200">{row.id_promo}</td>
+                    <td className="py-2 px-3 text-center border-x border-slate-200">
+                      <div 
+                        onClick={() => {
+                          if (row.gambar_promo) {
+                            setPreviewImage({ src: row.gambar_promo, alt: row.nama_promo });
+                          }
+                        }}
+                        className={`w-20 h-12 mx-auto rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center shadow-inner transition-all hover:scale-105 duration-300 ${row.gambar_promo ? 'cursor-pointer hover:opacity-80' : ''}`}
+                      >
                         {row.gambar_promo ? (
                           <img src={row.gambar_promo} alt="Promo" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="text-slate-300"><BadgePercent size={28} /></div>
+                          <div className="text-slate-300"><BadgePercent size={20} /></div>
                         )}
                       </div>
                     </td>
-                    <td className="p-4 border-x border-slate-200">
-                      <span className="font-black text-[#1e3a5f] tracking-wider uppercase bg-slate-100 px-2 py-1 rounded-md text-xs">
+                    <td className="py-2 px-3 border-x border-slate-200">
+                      <span className="font-black text-[#1e3a5f] tracking-wider uppercase bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">
                         {row.kode_promo}
                       </span>
                     </td>
-                    <td className="p-4 font-bold text-[#1e3a5f] border-x border-slate-200">{row.nama_promo}</td>
-                    <td className="p-4 border-x border-slate-200">
+                    <td className="py-2 px-3 font-bold text-[#1e3a5f] border-x border-slate-200">{row.nama_promo}</td>
+                    <td className="py-2 px-3 border-x border-slate-200">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-xs font-bold text-slate-400 uppercase">{row.tipe_promo}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">{row.tipe_promo}</span>
                         <span className="font-bold text-[#1e9a9f]">
                           {row.tipe_promo === 'Persentase'
                             ? `${row.nominal_potongan}%`
                             : formatCurrency(row.nominal_potongan)}
                         </span>
                         {row.maksimal_potongan > 0 && (
-                          <span className="text-xs text-slate-400">maks. {formatCurrency(row.maksimal_potongan)}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">maks. {formatCurrency(row.maksimal_potongan)}</span>
                         )}
                       </div>
                     </td>
-                    <td className="p-4 font-medium text-slate-600 border-x border-slate-200">
-                      {row.minimal_order > 0 ? formatCurrency(row.minimal_order) : <span className="text-slate-300">Tidak ada</span>}
+                    <td className="py-2 px-3 font-bold text-slate-600 border-x border-slate-200">
+                      {row.minimal_order > 0 ? formatCurrency(row.minimal_order) : <span className="text-slate-300 font-normal">Tidak ada</span>}
                     </td>
-                    <td className="p-4 border-x border-slate-200">
-                      <div className="text-xs font-medium text-slate-500 space-y-0.5">
+                    <td className="py-2 px-3 border-x border-slate-200">
+                      <div className="text-[10px] font-medium text-slate-500 space-y-0.5">
                         <div><span className="text-slate-400">Mulai:</span> {formatDate(row.tgl_mulai)}</div>
                         <div><span className="text-slate-400">Berakhir:</span> {formatDate(row.tgl_berakhir)}</div>
                       </div>
                     </td>
-                    <td className="p-4 text-center border-x border-slate-200">
-                      <span className={`text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap inline-block ${getStatusBadge(row.status_promo)}`}>
+                    <td className="py-2 px-3 text-center border-x border-slate-200">
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap inline-block ${getStatusBadge(row.status_promo)}`}>
                         {row.status_promo}
                       </span>
                     </td>
-                    <td className="p-4 border-x border-slate-200">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="py-2 px-3 border-x border-slate-200">
+                      <div className="flex items-center justify-center gap-1.5">
                         <Link
                           href={`/promo/edit/${row.id_promo}`}
                           title="Edit"
-                          className="p-2 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
+                          className="p-1.5 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
                         >
-                          <Edit size={16} />
+                          <Edit size={14} />
                         </Link>
                         <button
                           title="Hapus"
                           onClick={() => handleDelete(row.id_promo, row.nama_promo)}
-                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
+                          className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -327,6 +335,33 @@ export default function PromoPage() {
           </div>
         )}
       </div>
+
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-300 animate-in fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+            onClick={() => setPreviewImage(null)}
+          >
+            <X size={24} />
+          </button>
+          <div 
+            className="relative max-w-4xl max-h-[85vh] p-2 bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={previewImage.src} 
+              alt={previewImage.alt} 
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+            <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold py-2 px-3 rounded-lg text-center">
+              {previewImage.alt}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

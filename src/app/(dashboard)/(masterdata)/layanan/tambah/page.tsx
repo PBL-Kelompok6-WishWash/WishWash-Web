@@ -77,7 +77,8 @@ export default function TambahLayananPage() {
     jenis_satuan: 'Kg',
     harga_per_satuan: '',
     status_layanan: 'Aktif',
-    warna_layanan: '#00BCD4' // Default to Cyan
+    warna_layanan: '#00BCD4', // Default to Cyan
+    deskripsi_layanan: ''
   });
   
   const [statuses, setStatuses] = useState<{id: string, value: string}[]>([
@@ -233,6 +234,7 @@ export default function TambahLayananPage() {
         harga_per_satuan: parseFloat(formData.harga_per_satuan),
         status_layanan: formData.status_layanan,
         warna_layanan: formData.warna_layanan,
+        deskripsi_layanan: formData.deskripsi_layanan,
         referensi_status: statuses.map(s => s.value).filter(v => v.trim() !== ""),
         paket_layanan: pakets.map(p => ({
            nama_paket: p.nama_paket || 'Tanpa Nama',
@@ -303,6 +305,19 @@ export default function TambahLayananPage() {
                      onChange={(e) => setFormData({...formData, nama_layanan: e.target.value})}
                      placeholder="Contoh: Wash & Ironing" 
                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all"
+                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Deskripsi Layanan</label>
+                <div className="relative">
+                   <textarea 
+                     value={formData.deskripsi_layanan}
+                     onChange={(e) => setFormData({...formData, deskripsi_layanan: e.target.value})}
+                     placeholder="Contoh: Paket lengkap cuci bersih, kering, dan dilipat rapi." 
+                     rows={3}
+                     className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all resize-none"
                    />
                 </div>
               </div>

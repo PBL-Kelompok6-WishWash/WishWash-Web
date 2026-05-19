@@ -14,6 +14,7 @@ export interface LayananDTO {
   paket_layanan?: PaketLayananDTO[];
   status_layanan: string;
   warna_layanan?: string;
+  deskripsi_layanan?: string;
 }
 
 const BASE_URL = 'http://localhost:8080/api/v1/admin/layanan';

@@ -229,39 +229,39 @@ export default function ParfumPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse border-y border-slate-200 min-w-[600px]">
             <thead>
-              <tr className="bg-[#1e3a5f] text-white text-xs uppercase tracking-widest select-none">
-                <th className="p-4 font-bold text-center w-20 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_parfum')}>
+              <tr className="bg-[#1e3a5f] text-white text-[11px] uppercase tracking-wider select-none">
+                <th className="py-2.5 px-3 font-bold text-center w-16 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('id_parfum')}>
                   <div className="flex items-center justify-center">
                     ID
                     {renderSortIcon('id_parfum')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_parfum')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('nama_parfum')}>
                   <div className="flex items-center justify-between">
                     <span>Nama Parfum</span>
                     {renderSortIcon('nama_parfum')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('keterangan')}>
+                <th className="py-2.5 px-3 font-bold cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('keterangan')}>
                   <div className="flex items-center justify-between">
                     <span>Keterangan</span>
                     {renderSortIcon('keterangan')}
                   </div>
                 </th>
 
-                <th className="p-4 font-bold text-center w-28 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('status_parfum')}>
+                <th className="py-2.5 px-3 font-bold text-center w-24 cursor-pointer hover:bg-[#122640] transition-colors border-x border-white/10" onClick={() => handleSort('status_parfum')}>
                   <div className="flex items-center justify-center">Status {renderSortIcon('status_parfum')}</div>
                 </th>
-                <th className="p-4 font-bold text-center w-32 border-x border-white/10">Aksi</th>
+                <th className="py-2.5 px-3 font-bold text-center w-28 border-x border-white/10">Aksi</th>
               </tr>
             </thead>
 
-            <tbody className="text-sm">
+            <tbody className="text-xs">
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                  <td colSpan={5} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
                     <div className="flex justify-center mb-2">
                       <div className="w-8 h-8 border-4 border-slate-200 border-t-[#4FD1D9] rounded-full animate-spin"></div>
                     </div>
@@ -270,42 +270,42 @@ export default function ParfumPage() {
                 </tr>
               ) : paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
+                  <td colSpan={5} className="p-10 text-center text-slate-400 font-medium border-b border-slate-200">
                     {searchQuery ? "Data tidak ditemukan." : "Belum ada data parfum."}
                   </td>
                 </tr>
               ) : (
                 paginatedData.map((row) => (
                   <tr key={row.id_parfum} className="border-b border-slate-200 hover:bg-slate-50/80 transition-colors">
-                    <td className="p-4 text-center font-bold text-slate-400 border-x border-slate-200">
+                    <td className="py-2 px-3 text-center font-bold text-slate-400 border-x border-slate-200">
                       {row.id_parfum}
                     </td>
-                    <td className="p-4 font-bold text-[#1e3a5f] border-x border-slate-200">
+                    <td className="py-2 px-3 font-bold text-[#1e3a5f] border-x border-slate-200">
                       {row.nama_parfum}
                     </td>
-                    <td className="p-4 text-slate-600 font-medium border-x border-slate-200">
-                      {row.keterangan || <span className="text-slate-300 italic">Tidak ada keterangan</span>}
+                    <td className="py-2 px-3 text-slate-600 font-medium border-x border-slate-200">
+                      {row.keterangan || <span className="text-slate-300 italic text-[11px]">Tidak ada keterangan</span>}
                     </td>
-                    <td className="p-4 text-center border-x border-slate-200">
-                      <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap inline-block ${getStatusBadge(row.status_parfum)}`}>
+                    <td className="py-2 px-3 text-center border-x border-slate-200">
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap inline-block ${getStatusBadge(row.status_parfum)}`}>
                         {row.status_parfum}
                       </span>
                     </td>
-                    <td className="p-4 border-x border-slate-200">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="py-2 px-3 border-x border-slate-200">
+                      <div className="flex items-center justify-center gap-1.5">
                         <Link
                           href={`/parfum/edit/${row.id_parfum}`}
                           title="Edit"
-                          className="p-2 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
+                          className="p-1.5 flex items-center justify-center bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors active:scale-95"
                         >
-                          <Edit size={16} />
+                          <Edit size={14} />
                         </Link>
                         <button
                           title="Hapus"
                           onClick={() => handleDelete(row.id_parfum, row.nama_parfum)}
-                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
+                          className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
