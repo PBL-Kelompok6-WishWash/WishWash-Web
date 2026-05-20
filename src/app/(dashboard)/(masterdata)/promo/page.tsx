@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, CheckCircle, XCircle, X, BadgePercent
 } from 'lucide-react';
 import { promoService } from '@/services/promoService';
+import { getImageUrl } from '@/utils/imageHelper';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -229,13 +230,13 @@ export default function PromoPage() {
                       <div 
                         onClick={() => {
                           if (row.gambar_promo) {
-                            setPreviewImage({ src: row.gambar_promo, alt: row.nama_promo });
+                            setPreviewImage({ src: getImageUrl(row.gambar_promo), alt: row.nama_promo });
                           }
                         }}
                         className={`w-20 h-12 mx-auto rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center shadow-inner transition-all hover:scale-105 duration-300 ${row.gambar_promo ? 'cursor-pointer hover:opacity-80' : ''}`}
                       >
                         {row.gambar_promo ? (
-                          <img src={row.gambar_promo} alt="Promo" className="w-full h-full object-cover" />
+                          <img src={getImageUrl(row.gambar_promo)} alt="Promo" className="w-full h-full object-cover" />
                         ) : (
                           <div className="text-slate-300"><BadgePercent size={20} /></div>
                         )}

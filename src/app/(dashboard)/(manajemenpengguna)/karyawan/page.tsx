@@ -7,6 +7,7 @@ import {
   CheckCircle, XCircle, X
 } from 'lucide-react';
 import { karyawanService } from '@/services/karyawanService';
+import { getImageUrl } from '@/utils/imageHelper';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -300,14 +301,14 @@ export default function KaryawanPage() {
                       <div 
                         onClick={() => {
                           if (row.foto_karyawan) {
-                            setPreviewImage({ src: row.foto_karyawan, alt: row.nama_karyawan });
+                            setPreviewImage({ src: getImageUrl(row.foto_karyawan), alt: row.nama_karyawan });
                           }
                         }}
                         className={`w-12 h-12 rounded-full overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner transition-all hover:scale-105 duration-300 ${row.foto_karyawan ? 'cursor-pointer hover:opacity-80' : ''}`}
                       >
                         {row.foto_karyawan ? (
                           <img
-                            src={row.foto_karyawan}
+                            src={getImageUrl(row.foto_karyawan)}
                             alt={row.nama_karyawan}
                             className="w-full h-full object-cover"
                             onError={(e) => {

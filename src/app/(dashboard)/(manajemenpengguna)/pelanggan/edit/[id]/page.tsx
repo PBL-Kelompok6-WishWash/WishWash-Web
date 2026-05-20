@@ -7,6 +7,7 @@ import {
   ArrowLeft, Save, User, Mail, Lock, Phone, UserCircle, Image as ImageIcon, X 
 } from 'lucide-react';
 import { pelangganService } from '@/services/pelangganService';
+import { getImageUrl } from '@/utils/imageHelper';
 import SplashScreen from '@/app/components/SplashScreen';
 
 export default function EditPelangganPage() {
@@ -44,7 +45,7 @@ export default function EditPelangganPage() {
         });
         
         if (data.foto_pelanggan) {
-          setPreview(data.foto_pelanggan);
+          setPreview(getImageUrl(data.foto_pelanggan));
         }
       } catch (error: any) {
         setErrorMsg("Gagal mengambil data pelanggan. Mungkin data sudah dihapus.");

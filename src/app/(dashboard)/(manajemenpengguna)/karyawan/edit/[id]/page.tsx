@@ -7,6 +7,7 @@ import {
   ArrowLeft, Save, User, Mail, Lock, Phone, UserCircle, Image as ImageIcon, X, Truck, Tag, Hash
 } from 'lucide-react';
 import { karyawanService } from '@/services/karyawanService';
+import { getImageUrl } from '@/utils/imageHelper';
 import SplashScreen from '@/app/components/SplashScreen';
 
 export default function EditKaryawanPage() {
@@ -50,7 +51,7 @@ export default function EditKaryawanPage() {
         });
         
         if (data.foto_karyawan) {
-          setPreview(data.foto_karyawan);
+          setPreview(getImageUrl(data.foto_karyawan));
         }
       } catch (error: any) {
         setErrorMsg("Gagal mengambil data karyawan. Mungkin data sudah dihapus.");

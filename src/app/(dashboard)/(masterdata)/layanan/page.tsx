@@ -7,6 +7,7 @@ import {
   CheckCircle, XCircle, X
 } from 'lucide-react';
 import { layananService } from '@/services/layananService';
+import { getImageUrl } from '@/utils/imageHelper';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -30,18 +31,16 @@ interface Layanan {
 
 function LayananImage({ src, alt }: { src: string; alt: string }) {
   const [error, setError] = useState(false);
-  const isValid = src && (src.startsWith('data:image') || src.startsWith('http') || src.startsWith('assets/'));
+  const resolvedSrc = getImageUrl(src);
+  const isValid = resolvedSrc && (resolvedSrc.startsWith('data:image') || resolvedSrc.startsWith('http') || resolvedSrc.startsWith('/'));
 
   if (!isValid || error) {
     return <ImageIcon size={28} className="text-slate-300" />;
   }
 
-  // Prepend slash to load mobile path from web public assets directory
-  const displaySrc = src.startsWith('assets/') ? `/${src}` : src;
-
   return (
     <img
-      src={displaySrc}
+      src={resolvedSrc}
       alt={alt}
       className="w-full h-full object-cover"
       onError={() => setError(true)}
@@ -328,7 +327,7 @@ export default function LayananPage() {
                       <div 
                         onClick={() => {
                           if (row.gambar_layanan) {
-                            setPreviewImage({ src: row.gambar_layanan.startsWith('assets/') ? `/${row.gambar_layanan}` : row.gambar_layanan, alt: row.nama_layanan });
+                            setPreviewImage({ src: getImageUrl(row.gambar_layanan), alt: row.nama_layanan });
                           }
                         }}
                         className={`w-14 h-14 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner transition-all hover:scale-105 duration-300 ${row.gambar_layanan ? 'cursor-pointer hover:opacity-80' : ''}`}

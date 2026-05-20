@@ -5,6 +5,7 @@ import { ChevronLeft, Plus, Trash2, GripVertical, Save, ClipboardList, Tag, Imag
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { layananService } from '@/services/layananService';
+import { getImageUrl } from '@/utils/imageHelper';
 
 import { 
   DndContext, 
@@ -160,8 +161,8 @@ export default function EditLayananPage() {
           setPresetColors([...DEFAULT_COLORS, loadedColor]);
         }
         
-        if (data.gambar_layanan && (data.gambar_layanan.startsWith('data:image') || data.gambar_layanan.startsWith('http') || data.gambar_layanan.startsWith('assets/'))) {
-           setPreview(data.gambar_layanan);
+        if (data.gambar_layanan) {
+           setPreview(getImageUrl(data.gambar_layanan));
         }
 
         if (data.referensi_status && data.referensi_status.length > 0) {
@@ -504,7 +505,7 @@ export default function EditLayananPage() {
                 </div>
                 {preview && (
                   <div className="mt-3 relative w-32 h-32 rounded-2xl border-4 border-slate-100 overflow-hidden shadow-sm">
-                    <img src={preview.startsWith('assets/') ? `/${preview}` : preview} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                     <button 
                       type="button"
                       onClick={removeFoto}

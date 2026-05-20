@@ -8,6 +8,7 @@ import {
   Percent, BadgeDollarSign, Image as ImageIcon, X
 } from 'lucide-react';
 import { promoService } from '@/services/promoService';
+import { getImageUrl } from '@/utils/imageHelper';
 import SplashScreen from '@/app/components/SplashScreen';
 
 const formatThousands = (val: string) => {
@@ -67,7 +68,7 @@ export default function EditPromoPage() {
         setNominalRaw(rawNominal);
         setNominalDisplay(isPersentase ? `${rawNominal}%` : formatThousands(rawNominal));
 
-        if (d.gambar_promo) setPreview(d.gambar_promo);
+        if (d.gambar_promo) setPreview(getImageUrl(d.gambar_promo));
       } catch {
         setErrorMsg('Gagal mengambil data promo. Mungkin data sudah dihapus.');
       } finally {

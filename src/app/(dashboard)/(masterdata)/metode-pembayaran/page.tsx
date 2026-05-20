@@ -7,6 +7,7 @@ import {
   CheckCircle, XCircle, X, CreditCard, Image as ImageIcon
 } from 'lucide-react';
 import { metodePembayaranService } from '@/services/metodePembayaranService';
+import { getImageUrl } from '@/utils/imageHelper';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -239,13 +240,13 @@ export default function MetodePembayaranPage() {
                       <div 
                         onClick={() => {
                           if (row.gambar_metode) {
-                            setPreviewImage({ src: row.gambar_metode, alt: row.nama_metode });
+                            setPreviewImage({ src: getImageUrl(row.gambar_metode), alt: row.nama_metode });
                           }
                         }}
                         className={`w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center mx-auto overflow-hidden border border-slate-200 shadow-inner transition-all hover:scale-105 duration-300 ${row.gambar_metode ? 'cursor-pointer hover:opacity-80' : ''}`}
                       >
                         {row.gambar_metode ? (
-                          <img src={row.gambar_metode} alt={row.nama_metode} className="w-full h-full object-contain p-1" />
+                          <img src={getImageUrl(row.gambar_metode)} alt={row.nama_metode} className="w-full h-full object-contain p-1" />
                         ) : <CreditCard size={18} className="text-slate-300" />}
                       </div>
                     </td>

@@ -7,6 +7,7 @@ import {
   CheckCircle, XCircle, X
 } from 'lucide-react';
 import { pelangganService } from '@/services/pelangganService';
+import { getImageUrl } from '@/utils/imageHelper';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -295,14 +296,14 @@ export default function PelangganPage() {
                       <div 
                         onClick={() => {
                           if (row.foto_pelanggan) {
-                            setPreviewImage({ src: row.foto_pelanggan, alt: row.nama_lengkap });
+                            setPreviewImage({ src: getImageUrl(row.foto_pelanggan), alt: row.nama_lengkap });
                           }
                         }}
                         className={`w-12 h-12 rounded-full overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center text-slate-300 shadow-inner transition-all hover:scale-105 duration-300 ${row.foto_pelanggan ? 'cursor-pointer hover:opacity-80' : ''}`}
                       >
                         {row.foto_pelanggan ? (
                           <img
-                            src={row.foto_pelanggan}
+                            src={getImageUrl(row.foto_pelanggan)}
                             alt={row.nama_lengkap}
                             className="w-full h-full object-cover"
                             onError={(e) => {

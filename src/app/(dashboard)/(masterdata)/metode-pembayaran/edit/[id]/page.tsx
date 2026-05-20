@@ -7,6 +7,7 @@ import {
   ArrowLeft, Save, CreditCard, Tag, Settings, Image as ImageIcon, X, ChevronDown
 } from 'lucide-react';
 import { metodePembayaranService } from '@/services/metodePembayaranService';
+import { getImageUrl } from '@/utils/imageHelper';
 import SplashScreen from '@/app/components/SplashScreen';
 
 export default function EditMetodePembayaranPage() {
@@ -39,7 +40,7 @@ export default function EditMetodePembayaranPage() {
           gambar_metode: data.gambar_metode || '',
           status_metode: data.status_metode || 'Aktif'
         });
-        if (data.gambar_metode) setPreview(data.gambar_metode);
+        if (data.gambar_metode) setPreview(getImageUrl(data.gambar_metode));
       } catch (error) {
         setErrorMsg("Gagal mengambil data.");
       } finally {
