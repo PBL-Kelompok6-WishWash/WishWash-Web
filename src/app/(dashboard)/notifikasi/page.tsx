@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Bell, Search, CheckCheck, ShoppingBag, CreditCard, Rocket, UserPlus, Info } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { notifikasiService, NotifikasiDTO } from '../../../services/notifikasiService';
 
 export default function NotifikasiPage() {
@@ -132,7 +133,7 @@ export default function NotifikasiPage() {
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       {/* Header Halaman */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -153,42 +154,41 @@ export default function NotifikasiPage() {
       {/* Area Kontrol (Search & Tabs) */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
         {/* Tab Filters */}
-        <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
-          <button 
-            onClick={() => setActiveTab('all')}
-            className={`flex-1 md:flex-initial px-5 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all ${
-              activeTab === 'all' 
-                ? 'bg-white text-[#1e3a5f] shadow-sm' 
-                : 'text-slate-500 hover:text-[#1e3a5f]'
-            }`}
-          >
-            Semua
-          </button>
-          <button 
-            onClick={() => setActiveTab('unread')}
-            className={`flex-1 md:flex-initial px-5 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all relative ${
-              activeTab === 'unread' 
-                ? 'bg-white text-[#1e3a5f] shadow-sm' 
-                : 'text-slate-500 hover:text-[#1e3a5f]'
-            }`}
-          >
-            Belum Dibaca
-            {unreadCount > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-bold">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-          <button 
-            onClick={() => setActiveTab('read')}
-            className={`flex-1 md:flex-initial px-5 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all ${
-              activeTab === 'read' 
-                ? 'bg-white text-[#1e3a5f] shadow-sm' 
-                : 'text-slate-500 hover:text-[#1e3a5f]'
-            }`}
-          >
-            Sudah Dibaca
-          </button>
+        <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto relative">
+          {[
+            { id: 'all', label: 'Semua' },
+            { id: 'unread', label: 'Belum Dibaca' },
+            { id: 'read', label: 'Sudah Dibaca' }
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex-1 md:flex-initial px-5 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all relative z-10 ${
+                  isActive 
+                    ? 'text-[#1e3a5f]' 
+                    : 'text-slate-500 hover:text-[#1e3a5f]'
+                }`}
+              >
+                <span className="relative z-10 flex items-center justify-center gap-1.5">
+                  {tab.label}
+                  {tab.id === 'unread' && unreadCount > 0 && (
+                    <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-bold">
+                      {unreadCount}
+                    </span>
+                  )}
+                </span>
+                {isActive && (
+                  <motion.div
+                    layoutId="activeNotifTab"
+                    className="absolute inset-0 bg-white rounded-lg shadow-sm z-0"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Search Input */}
