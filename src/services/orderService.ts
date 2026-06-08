@@ -33,6 +33,17 @@ export const orderService = {
     return result;
   },
 
+  // Ambil detail by Kode Order
+  getByKode: async (kode: string) => {
+    const res = await fetch(`${BASE_URL}/by-kode/${kode}`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || "Gagal mengambil data pesanan");
+    return result;
+  },
+
   // Update order (status, kuantitas, total_bayar, status_pembayaran, metode_bayar)
   update: async (id: number, data: any) => {
     const res = await fetch(`${BASE_URL}/${id}`, {

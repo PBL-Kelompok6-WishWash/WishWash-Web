@@ -223,13 +223,13 @@ export default function Header() {
                             </div>
 
                             <div className="max-h-[360px] overflow-y-auto divide-y divide-slate-100">
-                                {notifications.length === 0 ? (
+                                {notifications.filter(n => !n.is_read).length === 0 ? (
                                     <div className="p-8 text-center text-slate-400 text-sm">
                                         <Bell className="mx-auto mb-2 text-slate-300" size={32} />
                                         Tidak ada notifikasi baru
                                     </div>
                                 ) : (
-                                    notifications.map((notif) => (
+                                    notifications.filter(n => !n.is_read).map((notif) => (
                                         <div 
                                             key={notif.id_notifikasi}
                                             onClick={() => {
@@ -237,21 +237,15 @@ export default function Header() {
                                                     handleMarkAsRead(notif.id_notifikasi);
                                                 }
                                             }}
-                                            className={`p-4 flex gap-3 cursor-pointer transition-colors relative hover:bg-slate-50/80 ${
-                                                !notif.is_read ? 'bg-blue-50/5' : ''
-                                            }`}
+                                            className="p-4 flex gap-3 cursor-pointer transition-colors relative hover:bg-slate-50/80 bg-blue-50/5"
                                         >
                                             {getNotifIcon(notif.judul)}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-start gap-1">
-                                                    <p className={`text-xs sm:text-sm text-[#1e3a5f] truncate ${
-                                                        !notif.is_read ? 'font-bold' : 'font-medium'
-                                                    }`}>
+                                                    <p className="text-xs sm:text-sm text-[#1e3a5f] truncate font-bold">
                                                         {notif.judul}
                                                     </p>
-                                                    {!notif.is_read && (
-                                                        <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5"></span>
-                                                    )}
+                                                    <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5"></span>
                                                 </div>
                                                 <p className="text-xs text-slate-500 mt-1 leading-relaxed break-words">
                                                     {notif.pesan}
