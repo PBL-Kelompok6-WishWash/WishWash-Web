@@ -24,6 +24,7 @@ export default function Header() {
     const pathname = usePathname();
 
     const isProfilePage = pathname.startsWith('/profile');
+    const isNotifPage = pathname.startsWith('/notifikasi');
 
     const loadNotifications = async () => {
         try {
@@ -188,7 +189,9 @@ export default function Header() {
                 <div className="relative" ref={notifRef}>
                     <button 
                         onClick={() => setIsNotifOpen(!isNotifOpen)}
-                        className="relative text-slate-400 hover:text-[#4FD1D9] transition-colors p-2"
+                        className={`relative transition-colors p-2 ${
+                            isNotifPage ? 'text-[#4FD1D9]' : 'text-slate-400 hover:text-[#4FD1D9]'
+                        }`}
                     >
                         <Bell size={22} />
                         {unreadCount > 0 && (

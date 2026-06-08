@@ -181,16 +181,14 @@ export default function NotifikasiPage() {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex-1 md:flex-initial px-5 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all relative z-10 ${
                   isActive 
-                    ? 'text-white' 
+                    ? 'text-[#1e3a5f]' 
                     : 'text-slate-500 hover:text-[#1e3a5f]'
                 }`}
               >
                 <span className="relative z-10 flex items-center justify-center gap-1.5">
                   {tab.label}
                   {tab.id === 'unread' && unreadCount > 0 && (
-                    <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold transition-all ${
-                      isActive ? 'bg-white text-red-600' : 'bg-red-500 text-white'
-                    }`}>
+                    <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-bold">
                       {unreadCount}
                     </span>
                   )}
@@ -198,7 +196,7 @@ export default function NotifikasiPage() {
                 {isActive && (
                   <motion.div
                     layoutId="activeNotifTab"
-                    className="absolute inset-0 bg-[#1e3a5f] rounded-lg shadow-sm z-0"
+                    className="absolute inset-0 bg-white rounded-lg shadow-sm z-0"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
