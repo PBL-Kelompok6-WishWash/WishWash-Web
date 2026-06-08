@@ -257,6 +257,15 @@ export default function Header() {
                                     ))
                                 )}
                             </div>
+                            <div className="p-3 border-t border-slate-100 bg-slate-50/50 text-center shrink-0">
+                                <Link 
+                                    href="/notifikasi"
+                                    onClick={() => setIsNotifOpen(false)}
+                                    className="text-xs font-bold text-[#4FD1D9] hover:text-[#3dbec5] transition-colors block w-full py-1"
+                                >
+                                    Lihat Semua Notifikasi
+                                </Link>
+                            </div>
                         </div>
                     )}
                 </div>
