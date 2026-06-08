@@ -9,6 +9,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -17,6 +18,7 @@ export default function Sidebar() {
   const [isMasterDataOpen, setIsMasterDataOpen] = useState(false);
   const [isManajemenOpen, setIsManajemenOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -27,7 +29,15 @@ export default function Sidebar() {
     if (['/pelanggan', '/karyawan'].some(path => pathname.startsWith(path))) {
       setIsManajemenOpen(true);
     }
+    // Close mobile sidebar on route change
+    setIsMobileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const handleToggle = () => setIsMobileOpen(prev => !prev);
+    window.addEventListener('toggleSidebarMobile', handleToggle);
+    return () => window.removeEventListener('toggleSidebarMobile', handleToggle);
+  }, []);
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -65,24 +75,49 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-white flex flex-col sticky top-0 h-screen border-r border-slate-200 transition-all duration-300 ease-in-out ${showLogoutConfirm ? 'z-[100]' : 'z-50'
-      }`}>
+    <>
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
 
-      {/* 1. Header Sidebar */}
-      <div className="h-[72px] px-6 flex items-center justify-between border-b border-slate-200 shrink-0">
-        {!isCollapsed && (
-          <div className="flex items-center gap-3 overflow-hidden py-1">
-            <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" />
-            <h1 className="text-xl font-black italic text-[#1e3a5f] tracking-tight pr-1 pt-0.5">Wish Wash</h1>
-          </div>
-        )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`text-slate-400 hover:text-[#4FD1D9] transition-colors p-1 ${isCollapsed ? 'mx-auto' : ''}`}
-        >
-          <Menu size={24} />
-        </button>
-      </div>
+      <aside className={`
+        fixed lg:static inset-y-0 left-0 flex flex-col h-screen border-r border-slate-200 bg-white
+        transition-all duration-300 ease-in-out
+        ${showLogoutConfirm ? 'z-[100]' : 'z-50'}
+        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isCollapsed ? 'lg:w-20' : 'lg:w-64'} 
+        w-64 shrink-0
+      `}>
+
+        {/* 1. Header Sidebar */}
+        <div className="h-[72px] px-6 flex items-center justify-between border-b border-slate-200 shrink-0">
+          {(!isCollapsed || isMobileOpen) && (
+            <div className="flex items-center gap-3 overflow-hidden py-1">
+              <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" />
+              <h1 className="text-xl font-black italic text-[#1e3a5f] tracking-tight pr-1 pt-0.5">Wish Wash</h1>
+            </div>
+          )}
+          
+          {/* Desktop Toggle Button */}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={`hidden lg:block text-slate-400 hover:text-[#4FD1D9] transition-colors p-1 ${isCollapsed ? 'mx-auto' : ''}`}
+          >
+            <Menu size={24} />
+          </button>
+
+          {/* Mobile Close Button */}
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="lg:hidden text-slate-400 hover:text-[#4FD1D9] transition-colors p-1"
+          >
+            <X size={24} />
+          </button>
+        </div>
 
       {/* 2. Menu Navigasi */}
       <nav className="flex-1 flex flex-col gap-1 p-4 overflow-y-auto custom-scrollbar pt-6">
@@ -101,17 +136,24 @@ export default function Sidebar() {
               <div key={item.name} className="flex flex-col mb-1">
                 <button
                   onClick={toggleOpen}
-                  className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-200 ${isAnyChildActive
-                      ? 'bg-[#4FD1D9] text-white font-bold shadow-md shadow-[#4FD1D9]/20'
+                  className={`relative flex items-center justify-between p-3 rounded-xl cursor-pointer overflow-hidden transition-colors duration-300 ${isAnyChildActive
+                      ? 'text-white font-bold'
                       : 'text-slate-500 hover:bg-slate-50 hover:text-[#1e3a5f]'
                     }`}
                 >
-                  <div className="flex items-center gap-3">
+                  {isAnyChildActive && (
+                    <motion.div
+                      layoutId="active-pill"
+                      className="absolute inset-0 bg-[#4FD1D9] rounded-xl shadow-md shadow-[#4FD1D9]/20 z-0 pointer-events-none"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <div className="flex items-center gap-3 relative z-10">
                     <div className={isAnyChildActive ? 'text-white' : 'text-slate-400'}>{item.icon}</div>
                     {!isCollapsed && <span className="text-[15px]">{item.name}</span>}
                   </div>
                   {!isCollapsed && (
-                    <div className={`transition-transform duration-200 ${isAnyChildActive ? 'text-white' : 'text-slate-400'} ${isOpen ? 'rotate-180' : ''}`}>
+                    <div className={`transition-transform duration-200 relative z-10 ${isAnyChildActive ? 'text-white' : 'text-slate-400'} ${isOpen ? 'rotate-180' : ''}`}>
                       <ChevronDown size={16} />
                     </div>
                   )}
@@ -125,15 +167,20 @@ export default function Sidebar() {
                         <Link
                           key={sub.name}
                           href={sub.path}
-                          // 💡 PERBAIKAN DI SINI: Kasih background halus & padding yang sedikit lebih lega
-                          className={`flex items-center gap-3 p-2.5 rounded-lg text-sm transition-all duration-200 ${isSubActive
-                              ? 'bg-[#4FD1D9]/15 text-[#11848c] font-bold shadow-sm'
+                          className={`relative flex items-center gap-3 p-2.5 rounded-lg text-sm overflow-hidden transition-all duration-250 ${isSubActive
+                              ? 'text-[#11848c] font-bold shadow-sm'
                               : 'text-slate-500 hover:bg-slate-50 hover:text-[#1e3a5f] hover:translate-x-1'
                             }`}
                         >
-                          {/* 💡 Warna icon ngikutin warna teks yang dipertajam */}
-                          <div className={isSubActive ? 'text-[#11848c]' : 'text-slate-300'}>{sub.icon}</div>
-                          {sub.name}
+                          {isSubActive && (
+                            <motion.div
+                              layoutId="sub-active-pill"
+                              className="absolute inset-0 bg-[#4FD1D9]/15 rounded-lg z-0 pointer-events-none"
+                              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                            />
+                          )}
+                          <div className={`relative z-10 transition-colors duration-300 ${isSubActive ? 'text-[#11848c]' : 'text-slate-300'}`}>{sub.icon}</div>
+                          <span className="relative z-10">{sub.name}</span>
                         </Link>
                       );
                     })}
@@ -148,13 +195,20 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.path!}
-              className={`flex items-center gap-3 p-3 mb-1 rounded-xl cursor-pointer transition-all duration-200 ${isActive
-                  ? 'bg-[#4FD1D9] text-white font-bold shadow-md shadow-[#4FD1D9]/20'
+              className={`relative flex items-center gap-3 p-3 mb-1 rounded-xl cursor-pointer overflow-hidden transition-colors duration-300 ${isActive
+                  ? 'text-white font-bold'
                   : 'text-slate-500 hover:bg-slate-50 hover:text-[#1e3a5f]'
                 } ${isCollapsed ? 'justify-center' : ''}`}
             >
-              <div className={isActive ? 'text-white' : 'text-slate-400'}>{item.icon}</div>
-              {!isCollapsed && <span className="text-[15px]">{item.name}</span>}
+              {isActive && (
+                <motion.div
+                  layoutId="active-pill"
+                  className="absolute inset-0 bg-[#4FD1D9] rounded-xl shadow-md shadow-[#4FD1D9]/20 z-0 pointer-events-none"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+              <div className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-white' : 'text-slate-400'}`}>{item.icon}</div>
+              {!isCollapsed && <span className="relative z-10 text-[15px] transition-colors duration-300">{item.name}</span>}
             </Link>
           );
         })}
@@ -209,5 +263,6 @@ export default function Sidebar() {
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </aside>
+  </>
   );
 }

@@ -285,9 +285,42 @@ export default function MetodePembayaranPage() {
             <div className="flex items-center gap-2">
               <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="p-2 rounded-lg border-2 border-slate-200 text-slate-500 hover:border-[#1e3a5f] hover:text-[#1e3a5f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeft size={16} /></button>
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button key={page} onClick={() => setCurrentPage(page)} className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors ${currentPage === page ? 'bg-[#1e3a5f] text-white shadow-md' : 'text-slate-500 hover:bg-slate-200'}`}>{page}</button>
-                ))}
+                {(() => {
+                  const pages: (number | string)[] = [];
+                  if (totalPages <= 5) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    if (currentPage <= 3) {
+                      pages.push(1, 2, 3, '...', totalPages);
+                    } else if (currentPage >= totalPages - 2) {
+                      pages.push(1, '...', totalPages - 2, totalPages - 1, totalPages);
+                    } else {
+                      pages.push(1, '...', currentPage, '...', totalPages);
+                    }
+                  }
+                  return pages.map((page, idx) => {
+                    if (page === '...') {
+                      return (
+                        <span key={`ell-${idx}`} className="w-8 h-8 flex items-center justify-center text-slate-400 font-bold text-sm select-none">
+                          ...
+                        </span>
+                      );
+                    }
+                    const pageNum = page as number;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors ${currentPage === pageNum
+                          ? 'bg-[#1e3a5f] text-white shadow-md'
+                          : 'text-slate-500 hover:bg-slate-50 bg-white border border-slate-200 hover:text-[#1e3a5f] hover:border-[#1e3a5f]'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
               <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="p-2 rounded-lg border-2 border-slate-200 text-slate-500 hover:border-[#1e3a5f] hover:text-[#1e3a5f] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRight size={16} /></button>
             </div>

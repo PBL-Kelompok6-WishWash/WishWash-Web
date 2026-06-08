@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { ChevronDown, User, LogOut, Bell, X } from 'lucide-react';
+import { ChevronDown, User, LogOut, Bell, X, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -43,14 +43,22 @@ export default function Header() {
     };
 
     return (
-        <header className={`h-[72px] bg-white border-b border-slate-200 px-8 flex justify-between items-center sticky top-0 shrink-0 transition-all ${showLogoutConfirm ? 'z-[100]' : 'z-40'
+        <header className={`h-[72px] bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center sticky top-0 shrink-0 transition-all ${showLogoutConfirm ? 'z-[100]' : 'z-40'
             }`}>
-            {/* Kiri: Teks Welcome */}
-            <div>
-                <p className="text-sm text-slate-500 font-medium mb-0.5">Welcome 👋</p>
-                <h2 className="text-xl font-black text-[#1e3a5f] capitalize tracking-tight leading-none">
-                    {username}
-                </h2>
+            {/* Kiri: Teks Welcome & Mobile Menu Toggle */}
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={() => window.dispatchEvent(new Event('toggleSidebarMobile'))}
+                    className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-[#4FD1D9] transition-all"
+                >
+                    <Menu size={22} />
+                </button>
+                <div>
+                    <p className="text-[11px] sm:text-sm text-slate-500 font-medium mb-0.5 leading-tight">Welcome 👋</p>
+                    <h2 className="text-base sm:text-xl font-black text-[#1e3a5f] capitalize tracking-tight leading-none">
+                        {username}
+                    </h2>
+                </div>
             </div>
 
             {/* Kanan: Notifikasi & Profil */}

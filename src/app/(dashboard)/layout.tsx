@@ -46,7 +46,7 @@ export default function DashboardLayout({
         <Header />
         
         {/* Konten Utama (Scrollable) */}
-        <div className="flex-1 p-8 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto custom-scrollbar">
           {children}
         </div>
         
