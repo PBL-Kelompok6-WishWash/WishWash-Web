@@ -207,7 +207,7 @@ export default function NotifikasiPage() {
       </div>
 
       {/* List Notifikasi */}
-      <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm min-h-[450px]">
         {loading ? (
           <div className="p-16 text-center text-slate-400 font-medium space-y-3">
             <div className="w-8 h-8 border-4 border-[#4FD1D9] border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -234,7 +234,7 @@ export default function NotifikasiPage() {
                   }
                 }}
                 className={`p-5 flex gap-4 transition-all cursor-pointer relative group hover:bg-slate-50/80 ${
-                  !notif.is_read ? 'bg-blue-50/5' : ''
+                  !notif.is_read ? 'bg-blue-50/20' : ''
                 }`}
               >
                 {/* Status Indicator Bar */}
