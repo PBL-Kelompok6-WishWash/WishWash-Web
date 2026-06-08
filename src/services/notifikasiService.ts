@@ -19,23 +19,47 @@ const getAuthHeaders = () => {
 
 export const notifikasiService = {
   getAll: async (): Promise<{ success: boolean; data: NotifikasiDTO[] }> => {
-    const res = await fetch(BASE_URL, { method: "GET", headers: getAuthHeaders() });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal mengambil data notifikasi");
-    return result;
+    try {
+      const res = await fetch(BASE_URL, { method: "GET", headers: getAuthHeaders() });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false, data: [] };
+      }
+      return {
+        success: true,
+        data: result.data || []
+      };
+    } catch (error) {
+      console.error("Error in getAll notifications:", error);
+      return { success: false, data: [] };
+    }
   },
 
   markAsRead: async (id: number): Promise<{ success: boolean }> => {
-    const res = await fetch(`${BASE_URL}/${id}/read`, { method: "PUT", headers: getAuthHeaders() });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal memperbarui status notifikasi");
-    return result;
+    try {
+      const res = await fetch(`${BASE_URL}/${id}/read`, { method: "PUT", headers: getAuthHeaders() });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false };
+      }
+      return { success: true };
+    } catch (error) {
+      console.error("Error in markAsRead:", error);
+      return { success: false };
+    }
   },
 
   markAllAsRead: async (): Promise<{ success: boolean }> => {
-    const res = await fetch(`${BASE_URL}/read-all`, { method: "PUT", headers: getAuthHeaders() });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal memperbarui semua status notifikasi");
-    return result;
+    try {
+      const res = await fetch(`${BASE_URL}/read-all`, { method: "PUT", headers: getAuthHeaders() });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false };
+      }
+      return { success: true };
+    } catch (error) {
+      console.error("Error in markAllAsRead:", error);
+      return { success: false };
+    }
   },
 };
