@@ -153,6 +153,20 @@ export default function NotifikasiPage() {
 
       {/* Area Kontrol (Search & Tabs) */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
+        {/* Search Input */}
+        <div className="relative w-full md:w-80">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+            <Search size={18} />
+          </span>
+          <input 
+            type="text" 
+            placeholder="Cari notifikasi..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:border-[#4FD1D9] focus:bg-white transition-all font-medium"
+          />
+        </div>
+
         {/* Tab Filters */}
         <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto relative">
           {[
@@ -167,14 +181,16 @@ export default function NotifikasiPage() {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex-1 md:flex-initial px-5 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all relative z-10 ${
                   isActive 
-                    ? 'text-[#1e3a5f]' 
+                    ? 'text-white' 
                     : 'text-slate-500 hover:text-[#1e3a5f]'
                 }`}
               >
                 <span className="relative z-10 flex items-center justify-center gap-1.5">
                   {tab.label}
                   {tab.id === 'unread' && unreadCount > 0 && (
-                    <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-bold">
+                    <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold transition-all ${
+                      isActive ? 'bg-white text-red-600' : 'bg-red-500 text-white'
+                    }`}>
                       {unreadCount}
                     </span>
                   )}
@@ -182,27 +198,13 @@ export default function NotifikasiPage() {
                 {isActive && (
                   <motion.div
                     layoutId="activeNotifTab"
-                    className="absolute inset-0 bg-white rounded-lg shadow-sm z-0"
+                    className="absolute inset-0 bg-[#1e3a5f] rounded-lg shadow-sm z-0"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
               </button>
             );
           })}
-        </div>
-
-        {/* Search Input */}
-        <div className="relative w-full md:w-80">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-            <Search size={18} />
-          </span>
-          <input 
-            type="text" 
-            placeholder="Cari notifikasi..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:border-[#4FD1D9] focus:bg-white transition-all font-medium"
-          />
         </div>
       </div>
 
