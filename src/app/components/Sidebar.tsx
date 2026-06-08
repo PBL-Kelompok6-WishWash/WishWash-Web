@@ -20,7 +20,7 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
 
   useEffect(() => {
     if (['/layanan', '/parfum', '/metode-pembayaran', '/promo'].some(path => pathname.startsWith(path))) {
@@ -40,14 +40,7 @@ export default function Sidebar() {
   }, []);
 
   const handleLogoutClick = () => {
-    setShowLogoutConfirm(true);
-  };
-
-  const executeLogout = () => {
-    localStorage.removeItem("jwt_token");
-    localStorage.removeItem("id_role");
-    localStorage.removeItem("nama_user");
-    router.replace("/auth");
+    window.dispatchEvent(new Event("triggerLogoutConfirm"));
   };
 
   const menuItems = [
@@ -87,7 +80,7 @@ export default function Sidebar() {
       <aside className={`
         fixed lg:static inset-y-0 left-0 flex flex-col h-screen border-r border-slate-200 bg-white
         transition-all duration-300 ease-in-out
-        ${showLogoutConfirm ? 'z-[100]' : 'z-50'}
+        z-50
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${isCollapsed ? 'lg:w-20' : 'lg:w-64'} 
         w-64 shrink-0
@@ -224,37 +217,6 @@ export default function Sidebar() {
           {!isCollapsed && <span className="text-[15px]">Logout</span>}
         </button>
       </div>
-
-      {/* MODAL KONFIRMASI LOGOUT */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1e3a5f]/40 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out]">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-[slideUpFade_0.3s_ease-out]">
-            <div className="p-8 text-center">
-              <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <LogOut size={32} className="text-red-500 ml-1" />
-              </div>
-              <h3 className="text-xl font-black text-[#1e3a5f] mb-2">Konfirmasi Keluar</h3>
-              <p className="text-slate-500 font-medium text-sm mb-8">
-                Apakah Anda yakin ingin keluar? Sesi Anda akan berakhir sekarang.
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="px-6 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all active:scale-95"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={executeLogout}
-                  className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95"
-                >
-                  Ya, Keluar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar { display: none; }

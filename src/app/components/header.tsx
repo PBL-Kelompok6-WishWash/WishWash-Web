@@ -51,6 +51,9 @@ export default function Header() {
 
         window.addEventListener("profileUpdated", fetchUsername);
         
+        const handleShowLogout = () => setShowLogoutConfirm(true);
+        window.addEventListener("triggerLogoutConfirm", handleShowLogout);
+        
         // Polling notifikasi setiap 20 detik
         const interval = setInterval(loadNotifications, 20000);
 
@@ -67,6 +70,7 @@ export default function Header() {
 
         return () => {
             window.removeEventListener("profileUpdated", fetchUsername);
+            window.removeEventListener("triggerLogoutConfirm", handleShowLogout);
             clearInterval(interval);
             document.removeEventListener("mousedown", handleClickOutside);
         };
