@@ -82,7 +82,7 @@ const getDisplayStatusName = (order: Transaksi): string => {
   if (rawStatus === "Ditolak") return "Ditolak";
 
   const qty = order.kuantitas || 0;
-  const isCourierOnWay = (order as any).is_courier_on_way || order.IsCourierOnWay || false;
+  const isCourierOnWay = (order as any).is_courier_on_way || (order as any).IsCourierOnWay || false;
   const tipeLogistik = order.tipe_logistik || "";
 
   if (rawStatus === "Pesanan Diterima") {
