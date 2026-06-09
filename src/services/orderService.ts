@@ -11,6 +11,27 @@ const getAuthHeaders = () => {
   };
 };
 
+const handleResponse = async (res: Response, defaultError: string) => {
+  if (res.status === 401) {
+    localStorage.removeItem("jwt_token");
+    localStorage.removeItem("id_role");
+    localStorage.removeItem("nama_user");
+    if (typeof window !== "undefined") {
+      window.location.href = "/auth";
+    }
+    throw new Error("Sesi Anda telah berakhir. Silakan login kembali.");
+  }
+  if (!res.ok) {
+    let errorMsg = defaultError;
+    try {
+      const result = await res.json();
+      errorMsg = result.error || defaultError;
+    } catch (e) {}
+    throw new Error(errorMsg);
+  }
+  return res.json();
+};
+
 export const orderService = {
   // Ambil semua data order
   getAll: async () => {
@@ -18,8 +39,7 @@ export const orderService = {
       method: "GET",
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error("Gagal mengambil data pesanan");
-    return res.json();
+    return handleResponse(res, "Gagal mengambil data pesanan");
   },
 
   // Ambil detail by ID
@@ -28,9 +48,7 @@ export const orderService = {
       method: "GET",
       headers: getAuthHeaders(),
     });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal mengambil data pesanan");
-    return result;
+    return handleResponse(res, "Gagal mengambil data pesanan");
   },
 
   // Ambil detail by Kode Order
@@ -39,9 +57,7 @@ export const orderService = {
       method: "GET",
       headers: getAuthHeaders(),
     });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal mengambil data pesanan");
-    return result;
+    return handleResponse(res, "Gagal mengambil data pesanan");
   },
 
   // Update order (status, kuantitas, total_bayar, status_pembayaran, metode_bayar)
@@ -51,9 +67,7 @@ export const orderService = {
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Gagal mengupdate pesanan");
-    return result;
+    return handleResponse(res, "Gagal mengupdate pesanan");
   },
 
   // Ambil ringkasan pendapatan & statistik
@@ -70,7 +84,6 @@ export const orderService = {
       method: "GET",
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error("Gagal mengambil ringkasan pendapatan");
-    return res.json();
+    return handleResponse(res, "Gagal mengambil ringkasan pendapatan");
   }
 };
