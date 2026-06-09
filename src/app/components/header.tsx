@@ -7,6 +7,10 @@ import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { notifikasiService, NotifikasiDTO } from '../../services/notifikasiService';
 
+// Tracking processed notification IDs globally in module scope to prevent duplicate toasts across component mounts & concurrent fetches
+const globalProcessedNotifIds = new Set<number>();
+let globalIsFirstLoad = true;
+
 export default function Header() {
     const [username, setUsername] = useState("Admin");
     const [avatarSeed, setAvatarSeed] = useState("Admin");
@@ -19,12 +23,12 @@ export default function Header() {
     const [notifications, setNotifications] = useState<NotifikasiDTO[]>([]);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     
-    // 🔔 State & Ref untuk Custom Toast Instan
+    // 🔔 State untuk Custom Toast Instan
     const [toasts, setToasts] = useState<any[]>([]);
-    const isFirstLoad = useRef(true);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const notifRef = useRef<HTMLDivElement>(null);
+    const isFetching = useRef(false);
     const router = useRouter();
     const pathname = usePathname();
 
@@ -77,29 +81,33 @@ export default function Header() {
     };
 
     const loadNotifications = async () => {
+        if (isFetching.current) return;
+        isFetching.current = true;
         try {
             const res = await notifikasiService.getAll();
             if (res.success) {
                 const fetched = res.data || [];
-                if (isFirstLoad.current) {
+                if (globalIsFirstLoad) {
+                    fetched.forEach(n => globalProcessedNotifIds.add(n.id_notifikasi));
                     setNotifications(fetched);
-                    isFirstLoad.current = false;
+                    globalIsFirstLoad = false;
                 } else {
-                    setNotifications(prev => {
-                        const newUnread = fetched.filter(n => 
-                            !n.is_read && !prev.some(p => p.id_notifikasi === n.id_notifikasi)
-                        );
-                        if (newUnread.length > 0) {
-                            newUnread.forEach(notif => {
+                    const newUnread = fetched.filter(n => !globalProcessedNotifIds.has(n.id_notifikasi));
+                    if (newUnread.length > 0) {
+                        newUnread.forEach(notif => {
+                            globalProcessedNotifIds.add(notif.id_notifikasi);
+                            if (!notif.is_read) {
                                 triggerToast(notif);
-                            });
-                        }
-                        return fetched;
-                    });
+                            }
+                        });
+                    }
+                    setNotifications(fetched);
                 }
             }
         } catch (error) {
             console.error("Gagal memuat notifikasi:", error);
+        } finally {
+            isFetching.current = false;
         }
     };
 
@@ -121,8 +129,8 @@ export default function Header() {
         const handleShowLogout = () => setShowLogoutConfirm(true);
         window.addEventListener("triggerLogoutConfirm", handleShowLogout);
         
-        // Polling notifikasi setiap 20 detik
-        const interval = setInterval(loadNotifications, 20000);
+        // Polling notifikasi setiap 2 detik agar lebih responsif (instan)
+        const interval = setInterval(loadNotifications, 2000);
 
         // Clicks outside handler
         function handleClickOutside(event: MouseEvent) {
@@ -311,7 +319,7 @@ export default function Header() {
                                                     <p className="text-xs sm:text-sm text-[#1e3a5f] truncate font-bold">
                                                         {notif.judul}
                                                     </p>
-                                                    <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5"></span>
+                                                    <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 mt-1.5"></span>
                                                 </div>
                                                 <p className="text-xs text-slate-500 mt-1 leading-relaxed break-words">
                                                     {notif.pesan}

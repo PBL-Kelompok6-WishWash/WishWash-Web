@@ -310,17 +310,12 @@ export default function NotifikasiPage() {
                   !notif.is_read ? 'bg-blue-50/20' : 'bg-white'
                 }`}
               >
-                {/* Status Indicator Bar */}
-                {!notif.is_read && (
-                  <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-blue-500 rounded-l-2xl"></div>
-                )}
-
                 {getNotifIcon(notif.judul)}
 
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <h4 className={`text-sm sm:text-base text-[#1e3a5f] ${
-                      !notif.is_read ? 'font-black' : 'font-bold'
+                    <h4 className={`text-sm sm:text-base transition-colors duration-200 ${
+                      !notif.is_read ? 'text-[#1e3a5f] font-black' : 'text-slate-400 font-bold'
                     }`}>
                       {notif.judul}
                     </h4>
@@ -328,7 +323,9 @@ export default function NotifikasiPage() {
                       {getRelativeTime(notif.created_at)}
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed font-medium">
+                  <p className={`text-xs sm:text-sm mt-1.5 leading-relaxed font-medium transition-colors duration-200 ${
+                    !notif.is_read ? 'text-slate-600' : 'text-slate-400'
+                  }`}>
                     {notif.pesan}
                   </p>
                   <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-3 font-semibold uppercase tracking-wider">
@@ -339,8 +336,8 @@ export default function NotifikasiPage() {
 
                 {/* Mark as read helper dot */}
                 {!notif.is_read && (
-                  <div className="flex items-center justify-center shrink-0">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                  <div className="flex items-start justify-center pt-1.5 shrink-0">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
                   </div>
                 )}
               </div>
