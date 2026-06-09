@@ -413,15 +413,18 @@ export default function LaporanPage() {
                    {/* X-axis labels centered below grid points natively */}
                    {svgChartBars.map((bar, idx) => {
                      const day = bar.day;
+                     const isLastDay = day === svgChartBars.length;
+                     const shouldShowLabel = day === 1 || day === 5 || day === 10 || day === 15 || day === 20 || day === 25 || day === 30 || isLastDay;
+                     if (!shouldShowLabel) return null;
                      return (
                        <text 
                          key={`x-label-${idx}`}
                          x={bar.x} 
                          y="180" 
                          textAnchor="middle" 
-                         className="fill-slate-400 font-normal text-[6.5px]"
+                         className="fill-slate-400 font-extrabold text-[7.5px]"
                        >
-                         tgl {day}
+                         Tgl {day}
                        </text>
                      );
                    })}
