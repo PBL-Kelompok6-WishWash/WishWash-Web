@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { ChevronDown, User, LogOut, Bell, X, Menu, ShoppingBag, CreditCard, Rocket, UserPlus, CheckCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { notifikasiService, NotifikasiDTO } from '../../services/notifikasiService';
 
 export default function Header() {
@@ -17,6 +18,10 @@ export default function Header() {
     // 🔔 State untuk Notifikasi
     const [notifications, setNotifications] = useState<NotifikasiDTO[]>([]);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
+    
+    // 🔔 State & Ref untuk Custom Toast Instan
+    const [toasts, setToasts] = useState<any[]>([]);
+    const isFirstLoad = useRef(true);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const notifRef = useRef<HTMLDivElement>(null);
@@ -26,11 +31,72 @@ export default function Header() {
     const isProfilePage = pathname.startsWith('/profile');
     const isNotifPage = pathname.startsWith('/notifikasi');
 
+    const playChime = () => {
+        try {
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            
+            // Nada ke-1 (D5)
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+            gain1.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain1.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 0.04);
+            gain1.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35);
+            
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.start();
+            osc1.stop(audioCtx.currentTime + 0.4);
+            
+            // Nada ke-2 (A5)
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.08);
+            gain2.gain.setValueAtTime(0, audioCtx.currentTime + 0.08);
+            gain2.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 0.12);
+            gain2.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.55);
+            
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.start(audioCtx.currentTime + 0.08);
+            osc2.stop(audioCtx.currentTime + 0.6);
+        } catch (e) {
+            console.warn("Audio Context chime failed:", e);
+        }
+    };
+
+    const triggerToast = (notif: NotifikasiDTO) => {
+        const id = Date.now() + Math.random();
+        playChime();
+        setToasts(prev => [...prev, { id, ...notif }]);
+        setTimeout(() => {
+            setToasts(prev => prev.filter(t => t.id !== id));
+        }, 6000);
+    };
+
     const loadNotifications = async () => {
         try {
             const res = await notifikasiService.getAll();
             if (res.success) {
-                setNotifications(res.data || []);
+                const fetched = res.data || [];
+                if (isFirstLoad.current) {
+                    setNotifications(fetched);
+                    isFirstLoad.current = false;
+                } else {
+                    setNotifications(prev => {
+                        const newUnread = fetched.filter(n => 
+                            !n.is_read && !prev.some(p => p.id_notifikasi === n.id_notifikasi)
+                        );
+                        if (newUnread.length > 0) {
+                            newUnread.forEach(notif => {
+                                triggerToast(notif);
+                            });
+                        }
+                        return fetched;
+                    });
+                }
             }
         } catch (error) {
             console.error("Gagal memuat notifikasi:", error);
@@ -366,6 +432,50 @@ export default function Header() {
                     </div>
                 </div>
             )}
+            {/* TOAST NOTIFIKASI LAYOUT */}
+            <div className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-3.5 max-w-sm w-full pointer-events-none">
+                <AnimatePresence>
+                    {toasts.map((toast) => (
+                        <motion.div
+                            key={toast.id}
+                            initial={{ opacity: 0, x: 80, scale: 0.9 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: 50, scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                            className="bg-white/95 backdrop-blur-md border border-slate-200/80 p-4.5 rounded-[20px] shadow-[0_12px_36px_rgba(30,58,95,0.12)] pointer-events-auto flex items-start gap-4 relative overflow-hidden group select-none hover:border-[#4FD1D9]/40 transition-colors"
+                        >
+                            {/* Decorative side accent bar */}
+                            <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#4FD1D9]" />
+                            
+                            {/* Icon */}
+                            <div className="shrink-0 mt-0.5">
+                                {getNotifIcon(toast.judul)}
+                            </div>
+                            
+                            {/* Text Details */}
+                            <div className="flex-1 min-w-0 pr-4">
+                                <h4 className="font-extrabold text-[#1e3a5f] text-xs sm:text-sm tracking-tight leading-tight">
+                                    {toast.judul}
+                                </h4>
+                                <p className="text-[11px] text-slate-500 font-semibold mt-1 leading-relaxed break-words">
+                                    {toast.pesan}
+                                </p>
+                                <span className="text-[9px] text-[#259b9f] font-bold mt-2 block tracking-wider uppercase">
+                                    Baru saja
+                                </span>
+                            </div>
+                            
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                                className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded-full transition-colors shrink-0"
+                            >
+                                <X size={14} className="stroke-[2.5]" />
+                            </button>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </div>
         </header>
     );
 }
