@@ -52,6 +52,30 @@ export default function LaporanPage() {
   const [digitalRatio, setDigitalRatio] = useState(0);
   const [hoveredBar, setHoveredBar] = useState<any>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [printDateTime, setPrintDateTime] = useState('');
+
+  useEffect(() => {
+    const updatePrintTime = () => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const day = now.getDate();
+      const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      const monthName = monthNames[now.getMonth()];
+      const yearVal = now.getFullYear();
+      setPrintDateTime(`${timeStr} ${day} ${monthName}, ${yearVal}`);
+    };
+    
+    updatePrintTime();
+    
+    const handleBeforePrint = () => {
+      updatePrintTime();
+    };
+    window.addEventListener('beforeprint', handleBeforePrint);
+    return () => window.removeEventListener('beforeprint', handleBeforePrint);
+  }, []);
 
   // Filter and Sort Logic for Transactions table
   useEffect(() => {
@@ -232,7 +256,9 @@ export default function LaporanPage() {
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage) || 1;
 
   return (
-    <div className="w-full space-y-8 pb-10">
+    <>
+      {/* Halaman Dashboard Biasa (Hidden on print) */}
+      <div className="w-full space-y-8 pb-10 print:hidden">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -756,5 +782,96 @@ export default function LaporanPage() {
         )}
       </div>
     </div>
+
+    {/* Laporan Print / PDF View (Only visible on print) */}
+    <div className="hidden print:block w-full text-slate-800 p-4 font-sans text-xs">
+        {/* Header Laporan */}
+        <div className="text-center mb-6 relative">
+          {/* Top Left Print Date/Time */}
+          <div className="absolute left-0 top-0 text-[10px] text-slate-500 font-normal">
+            {printDateTime}
+          </div>
+          
+          <h1 className="text-lg font-bold tracking-wider text-slate-900 uppercase">
+            LAPORAN KEUANGAN LAUNDRY WISHWASH
+          </h1>
+          <h2 className="text-md font-bold text-slate-700 uppercase mt-1">
+            BULAN {months[month-1]?.label.toUpperCase()} {year}
+          </h2>
+          <p className="text-[10px] text-red-600 font-semibold mt-1">
+            {/* Range Date */}
+            {`01 ${months[month-1]?.label} ${year} - ${new Date(year, month, 0).getDate()} ${months[month-1]?.label} ${year}`}
+          </p>
+          <div className="border-b-2 border-slate-800 w-full mt-4"></div>
+        </div>
+
+        {/* Data Table */}
+        <table className="w-full border-collapse border border-slate-400 text-slate-800">
+          <thead>
+            <tr className="bg-slate-100 border-b border-slate-400">
+              <th className="border border-slate-400 p-2 text-center w-8 font-bold">No</th>
+              <th className="border border-slate-400 p-2 text-center w-24 font-bold">Tanggal</th>
+              <th className="border border-slate-400 p-2 text-center w-28 font-bold">Transaksi ID</th>
+              <th className="border border-slate-400 p-2 text-left w-36 font-bold">Pelanggan</th>
+              <th className="border border-slate-400 p-2 text-left font-bold">Layanan / Order</th>
+              <th className="border border-slate-400 p-2 text-center w-24 font-bold">Metode</th>
+              <th className="border border-slate-400 p-2 text-right w-28 font-bold">Jumlah Bayar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transactions.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="border border-slate-300 p-4 text-center text-slate-400 font-medium">
+                  Tidak ada data transaksi pada bulan ini.
+                </td>
+              </tr>
+            ) : (
+              transactions.map((tx, idx) => {
+                const parts = (tx.subtitle || '').split(' • ');
+                const pelangganName = parts[0] || '';
+                const layananName = parts.slice(1).join(' • ') || '';
+                
+                const txDate = new Date(tx.time);
+                const formattedDate = txDate.toLocaleDateString('id-ID', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                });
+
+                return (
+                  <tr key={idx} className="border-b border-slate-300">
+                    <td className="border border-slate-300 p-2 text-center">{idx + 1}</td>
+                    <td className="border border-slate-300 p-2 text-center">{formattedDate}</td>
+                    <td className="border border-slate-300 p-2 text-center font-semibold">{tx.id}</td>
+                    <td className="border border-slate-300 p-2 font-medium">{pelangganName}</td>
+                    <td className="border border-slate-300 p-2 text-slate-600">{tx.title} {layananName ? `• ${layananName}` : ''}</td>
+                    <td className="border border-slate-300 p-2 text-center capitalize">{tx.payment_method}</td>
+                    <td className="border border-slate-300 p-2 text-right font-bold">
+                      Rp {(tx.amount || 0).toLocaleString('id-ID')}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+            
+            {/* Total Row */}
+            <tr className="bg-slate-50 border-t border-slate-400 font-bold">
+              <td colSpan={6} className="border border-slate-400 p-2 text-right uppercase">
+                Total Pendapatan :
+              </td>
+              <td className="border border-slate-400 p-2 text-right font-bold text-slate-900">
+                Rp {monthlyRevenue.toLocaleString('id-ID')}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Footer Laporan */}
+        <div className="mt-8 border-t border-slate-400 pt-2 flex justify-between text-[10px] text-slate-500 font-normal">
+          <div>Halaman : 1</div>
+          <div>Laporan Keuangan Laundry WishWash</div>
+        </div>
+      </div>
+    </>
   );
 }
