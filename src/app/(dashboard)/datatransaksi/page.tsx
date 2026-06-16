@@ -83,6 +83,7 @@ const getDisplayStatusName = (order: Transaksi): string => {
 
   const qty = order.kuantitas || 0;
   const isCourierOnWay = (order as any).is_courier_on_way || (order as any).IsCourierOnWay || false;
+  const isCourierArrived = (order as any).is_courier_arrived || (order as any).IsCourierArrived || false;
   const tipeLogistik = order.tipe_logistik || "";
 
   if (rawStatus === "Pesanan Diterima") {
@@ -100,6 +101,9 @@ const getDisplayStatusName = (order: Transaksi): string => {
   if (rawStatus === "Siap Diantar") {
     if (tipeLogistik === "Self Pickup" || tipeLogistik === "Drop-off") {
       return "Menunggu Diambil";
+    }
+    if (isCourierArrived) {
+      return "Selesai Diantar";
     }
     return isCourierOnWay ? "Sedang Diantar" : "Menunggu Diantar";
   }
@@ -391,6 +395,7 @@ export default function DataTransaksiPage() {
                   <option value="Menunggu Diantar">Menunggu Diantar</option>
                   <option value="Menunggu Diambil">Menunggu Diambil</option>
                   <option value="Sedang Diantar">Sedang Diantar</option>
+                  <option value="Selesai Diantar">Selesai Diantar</option>
                   <option value="Selesai">Selesai</option>
                   <option value="Dibatalkan">Dibatalkan</option>
                 </select>
