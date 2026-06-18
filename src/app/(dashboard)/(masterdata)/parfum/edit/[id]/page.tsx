@@ -17,6 +17,7 @@ export default function EditParfumPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isUsed, setIsUsed] = useState(false);
   
   const [formData, setFormData] = useState({
     nama_parfum: '',
@@ -34,6 +35,7 @@ export default function EditParfumPage() {
           keterangan: data.keterangan || '',
           status_parfum: data.status_parfum || 'Tersedia'
         });
+        setIsUsed(!!data.is_used);
       } catch (error: any) {
         setErrorMsg("Gagal mengambil data parfum. Mungkin data sudah dihapus.");
       } finally {
@@ -114,7 +116,12 @@ export default function EditParfumPage() {
           <div className="grid grid-cols-1 gap-y-6">
             
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#1e3a5f] ml-1">Nama Parfum <span className="text-red-500">*</span></label>
+              <label className="text-sm font-bold text-[#1e3a5f] ml-1 flex items-center gap-1.5">
+                Nama Parfum <span className="text-red-500">*</span>
+                {isUsed && (
+                  <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded border border-slate-200 uppercase tracking-wide">Terkunci (Sudah Digunakan)</span>
+                )}
+              </label>
               <div className="relative">
                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                    <SprayCan size={18} className="text-slate-400" />
@@ -122,10 +129,15 @@ export default function EditParfumPage() {
                  <input 
                    type="text" 
                    required
+                   disabled={isUsed}
                    value={formData.nama_parfum}
                    onChange={(e) => setFormData({...formData, nama_parfum: e.target.value})}
                    placeholder="Contoh: Lavender Bliss" 
-                   className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all"
+                   className={`w-full pl-11 pr-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                     isUsed 
+                       ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed' 
+                       : 'border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f]'
+                   }`}
                  />
               </div>
             </div>

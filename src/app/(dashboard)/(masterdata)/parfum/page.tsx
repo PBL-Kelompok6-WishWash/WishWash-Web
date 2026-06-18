@@ -15,6 +15,7 @@ interface Parfum {
   nama_parfum: string;
   keterangan: string;
   status_parfum: string;
+  is_used?: boolean;
 }
 
 export default function ParfumPage() {
@@ -300,13 +301,23 @@ export default function ParfumPage() {
                         >
                           <Edit size={14} />
                         </Link>
-                        <button
-                          title="Hapus"
-                          onClick={() => handleDelete(row.id_parfum, row.nama_parfum)}
-                          className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {row.is_used ? (
+                          <button
+                            title="Parfum tidak dapat dihapus karena telah digunakan dalam transaksi"
+                            disabled
+                            className="p-1.5 bg-slate-100 text-slate-400 rounded-lg cursor-not-allowed opacity-60"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        ) : (
+                          <button
+                            title="Hapus"
+                            onClick={() => handleDelete(row.id_parfum, row.nama_parfum)}
+                            className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

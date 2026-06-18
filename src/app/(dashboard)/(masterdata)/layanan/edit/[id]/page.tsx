@@ -25,8 +25,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SortableStatusItem({ id, index, status, onRemove, onChange }: any) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+function SortableStatusItem({ id, index, status, onRemove, onChange, isUsed }: any) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: isUsed });
   
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -39,13 +39,13 @@ function SortableStatusItem({ id, index, status, onRemove, onChange }: any) {
       ref={setNodeRef} 
       style={style}
       className={`flex items-center gap-3 bg-slate-50 p-3 rounded-xl border-2 shadow-sm transition-colors ${
-        isDragging ? 'border-[#4FD1D9] scale-105 shadow-md bg-white opacity-90' : 'border-slate-100 hover:border-[#4FD1D9]'
-      }`}
+        isDragging ? 'border-[#4FD1D9] scale-105 shadow-md bg-white opacity-90' : 'border-slate-100'
+      } ${isUsed ? 'bg-slate-100/50' : 'hover:border-[#4FD1D9]'}`}
     >
       <div 
-        className="text-slate-300 cursor-grab active:cursor-grabbing p-1 hover:bg-slate-200 rounded" 
-        {...attributes} 
-        {...listeners}
+        className={`text-slate-300 p-1 rounded ${isUsed ? 'cursor-not-allowed opacity-40' : 'cursor-grab active:cursor-grabbing hover:bg-slate-200'}`}
+        {...(isUsed ? {} : attributes)} 
+        {...(isUsed ? {} : listeners)}
       >
          <GripVertical size={20} />
       </div>
@@ -55,14 +55,16 @@ function SortableStatusItem({ id, index, status, onRemove, onChange }: any) {
       <input 
          type="text"
          value={status}
+         disabled={isUsed}
          onChange={(e) => onChange(index, e.target.value)}
-         className="flex-1 bg-transparent outline-none font-bold text-[#1e3a5f]"
+         className={`flex-1 bg-transparent outline-none font-bold ${isUsed ? 'text-slate-400 cursor-not-allowed' : 'text-[#1e3a5f]'}`}
          placeholder={`Nama status ke-${index + 1}`}
       />
       <button 
          type="button"
+         disabled={isUsed}
          onClick={() => onRemove(index)}
-         className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all"
+         className={`p-2 rounded-lg transition-all ${isUsed ? 'text-slate-300 cursor-not-allowed opacity-50' : 'text-red-400 hover:text-red-600 hover:bg-red-50'}`}
       >
          <Trash2 size={18} />
       </button>
@@ -88,6 +90,7 @@ export default function EditLayananPage() {
   const [statuses, setStatuses] = useState<{id: string, value: string}[]>([]);
   const [pakets, setPakets] = useState<{id: string, nama_paket: string, durasi_jam: string, biaya_tambahan: string}[]>([]);
   const [preview, setPreview] = useState<string | null>(null);
+  const [isUsed, setIsUsed] = useState(false);
 
   const DEFAULT_COLORS = ['#00BCD4', '#8BC34A', '#9C27B0', '#FFC107'];
   const [presetColors, setPresetColors] = useState<string[]>(DEFAULT_COLORS);
@@ -153,6 +156,7 @@ export default function EditLayananPage() {
           warna_layanan: loadedColor,
           deskripsi_layanan: data.deskripsi_layanan || ''
         });
+        setIsUsed(!!data.is_used);
 
         // Add loaded color to presets if not already there
         const hex = loadedColor.toUpperCase();
@@ -354,15 +358,25 @@ export default function EditLayananPage() {
               </h2>
               
               <div className="space-y-2">
-                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Nama Layanan <span className="text-red-500">*</span></label>
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1 flex items-center gap-1.5">
+                  Nama Layanan <span className="text-red-500">*</span>
+                  {isUsed && (
+                    <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded border border-slate-200 uppercase tracking-wide">Terkunci (Sudah Digunakan)</span>
+                  )}
+                </label>
                 <div className="relative">
                    <input 
                      type="text" 
                      required
+                     disabled={isUsed}
                      value={formData.nama_layanan}
                      onChange={(e) => setFormData({...formData, nama_layanan: e.target.value})}
                      placeholder="Contoh: Wash & Ironing" 
-                     className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all"
+                     className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                       isUsed 
+                         ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed' 
+                         : 'border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f]'
+                     }`}
                    />
                 </div>
               </div>
@@ -381,11 +395,21 @@ export default function EditLayananPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-[#1e3a5f] ml-1">Jenis Satuan <span className="text-red-500">*</span></label>
+                <label className="text-sm font-bold text-[#1e3a5f] ml-1 flex items-center gap-1.5">
+                  Jenis Satuan <span className="text-red-500">*</span>
+                  {isUsed && (
+                    <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded border border-slate-200 uppercase tracking-wide">Terkunci</span>
+                  )}
+                </label>
                 <select 
                   value={formData.jenis_satuan}
+                  disabled={isUsed}
                   onChange={(e) => setFormData({...formData, jenis_satuan: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] bg-white text-[#1e3a5f] font-medium cursor-pointer transition-all"
+                  className={`w-full px-4 py-3 rounded-xl border-2 font-medium transition-all appearance-none ${
+                    isUsed 
+                      ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed' 
+                      : 'border-slate-100 focus:outline-none focus:border-[#4FD1D9] bg-white text-[#1e3a5f] cursor-pointer'
+                  }`}
                 >
                   <option value="Kg">Kg</option>
                   <option value="Pcs">Pcs</option>
@@ -518,18 +542,22 @@ export default function EditLayananPage() {
               </div>
             </div>
 
-            <div className="space-y-6">
+             <div className="space-y-6">
               <div className="flex items-center justify-between border-b-2 border-slate-100 pb-2">
                  <h2 className="text-lg font-black text-[#1e3a5f] flex items-center gap-2">
                     <ClipboardList size={18} className="text-[#4FD1D9]" /> Alur Status Layanan
                  </h2>
-                 <button 
-                   type="button" 
-                   onClick={handleAddStatus}
-                   className="flex items-center gap-1 text-sm bg-[#4FD1D9]/10 text-[#1e9a9f] px-4 py-2 rounded-lg font-bold hover:bg-[#4FD1D9]/20 transition-colors shadow-md border border-[#1e9a9f]/30"
-                 >
-                   <Plus size={16} /> Tambah Tahap
-                 </button>
+                 {isUsed ? (
+                   <span className="text-xs bg-slate-100 text-slate-500 font-bold px-3 py-1.5 rounded-lg border border-slate-200 uppercase tracking-wide">Terkunci (Sudah Digunakan)</span>
+                 ) : (
+                   <button 
+                     type="button" 
+                     onClick={handleAddStatus}
+                     className="flex items-center gap-1 text-sm bg-[#4FD1D9]/10 text-[#1e9a9f] px-4 py-2 rounded-lg font-bold hover:bg-[#4FD1D9]/20 transition-colors shadow-md border border-[#1e9a9f]/30"
+                   >
+                     <Plus size={16} /> Tambah Tahap
+                   </button>
+                 )}
               </div>
               
               <div className="space-y-3">
@@ -543,6 +571,7 @@ export default function EditLayananPage() {
                          status={status.value}
                          onRemove={handleRemoveStatus}
                          onChange={handleStatusChange}
+                         isUsed={isUsed}
                        />
                      ))}
                    </SortableContext>

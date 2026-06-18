@@ -27,6 +27,7 @@ interface Layanan {
   referensi_status: ReferensiStatus[];
   warna_layanan: string;
   deskripsi_layanan?: string;
+  is_used?: boolean;
 }
 
 function LayananImage({ src, alt }: { src: string; alt: string }) {
@@ -384,13 +385,23 @@ export default function LayananPage() {
                         >
                           <Edit size={14} />
                         </Link>
-                        <button
-                          title="Hapus"
-                          onClick={() => handleDelete(row.id_layanan, row.nama_layanan)}
-                          className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {row.is_used ? (
+                          <button
+                            title="Layanan tidak dapat dihapus karena telah digunakan dalam transaksi"
+                            disabled
+                            className="p-1.5 bg-slate-100 text-slate-400 rounded-lg cursor-not-allowed opacity-60"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        ) : (
+                          <button
+                            title="Hapus"
+                            onClick={() => handleDelete(row.id_layanan, row.nama_layanan)}
+                            className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors active:scale-95"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
