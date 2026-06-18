@@ -476,7 +476,7 @@ export default function DashboardPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl md:text-2xl font-black text-[#1e3a5f] uppercase tracking-wider">
+          <h2 className="text-3xl font-black text-[#1e3a5f] uppercase tracking-wider">
             Dashboard
           </h2>
         </div>
