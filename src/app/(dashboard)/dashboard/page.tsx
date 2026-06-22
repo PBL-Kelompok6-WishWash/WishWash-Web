@@ -336,7 +336,6 @@ export default function DashboardPage() {
           }))
           .sort((a, b) => b.percent - a.percent);
 
-        const allLayanan = layananRes.data || [];
         const layananColorMap = new Map<string, string>();
         allLayanan.forEach((lay: any) => {
           if (lay.nama_layanan && lay.warna_layanan) {
