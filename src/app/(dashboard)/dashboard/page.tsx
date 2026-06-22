@@ -423,6 +423,52 @@ export default function DashboardPage() {
       return !["Selesai", "Batal", "Dibatalkan"].includes(lastStatus);
     }).length;
 
+    // 1. Calculate Monthly Comparison Trends (Month-on-Month)
+    const prevMonth = filterMonth === 1 ? 12 : filterMonth - 1;
+    const prevYear = filterMonth === 1 ? filterYear - 1 : filterYear;
+
+    const prevMonthOrders = rawOrders.filter((ord: any) => {
+      if (!ord.tgl_pesanan) return false;
+      const orderDate = new Date(ord.tgl_pesanan);
+      return (orderDate.getMonth() + 1) === prevMonth && orderDate.getFullYear() === prevYear;
+    });
+
+    const prevMonthRevenue = prevMonthOrders
+      .filter((ord: any) => {
+        const history = ord.RiwayatStatusDetail || ord.riwayatStatusDetail || [];
+        const isSelesai = history.some((h: any) => {
+          const statusName = h.ReferensiStatus?.nama_status || h.ReferensiStatus?.NamaStatus || h.referensi_status?.nama_status;
+          return statusName === "Selesai";
+        });
+        const isPaid = ord.Pembayaran?.status_pembayaran === "Paid" || ord.Pembayaran?.status_pembayaran === "Lunas";
+        return isSelesai || isPaid;
+      })
+      .reduce((sum: number, ord: any) => sum + (ord.total_bayar || 0), 0);
+
+    const prevMonthCustomers = rawPelanggan.filter((pel: any) => {
+      if (!pel.tgl_daftar && !pel.createdAt) return false;
+      const regDate = new Date(pel.tgl_daftar || pel.createdAt);
+      return (regDate.getMonth() + 1) === prevMonth && regDate.getFullYear() === prevYear;
+    }).length;
+
+    // Helper to calculate percentage trend
+    const calculateTrend = (curr: number, prev: number) => {
+      if (prev === 0) return curr > 0 ? '+100%' : '0%';
+      const percent = ((curr - prev) / prev) * 100;
+      return `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
+    };
+
+    const revenueTrendStr = calculateTrend(totalRevenue, prevMonthRevenue);
+    const ordersTrendStr = calculateTrend(incomingOrdersCount, prevMonthOrders.length);
+    const customersTrendStr = calculateTrend(
+      rawPelanggan.filter((pel: any) => {
+        if (!pel.tgl_daftar && !pel.createdAt) return false;
+        const regDate = new Date(pel.tgl_daftar || pel.createdAt);
+        return (regDate.getMonth() + 1) === filterMonth && regDate.getFullYear() === filterYear;
+      }).length,
+      prevMonthCustomers
+    );
+
     const processedStats: StatItem[] = [
       { 
         label: 'Pendapatan Bulan Ini', 
@@ -430,8 +476,8 @@ export default function DashboardPage() {
         isCurrency: true, 
         icon: <DollarSign size={32} />, 
         color: 'from-emerald-400 to-emerald-600', 
-        trend: 'Filter', 
-        isUp: true
+        trend: revenueTrendStr, 
+        isUp: !revenueTrendStr.startsWith('-')
       },
       { 
         label: 'Total Pesanan', 
@@ -439,8 +485,8 @@ export default function DashboardPage() {
         isCurrency: false, 
         icon: <ShoppingBag size={32} />, 
         color: 'from-[#4FD1D9] to-[#2fb5bd]', 
-        trend: 'Filter', 
-        isUp: true 
+        trend: ordersTrendStr, 
+        isUp: !ordersTrendStr.startsWith('-')
       },
       { 
         label: 'Pelanggan Terdaftar', 
@@ -448,8 +494,8 @@ export default function DashboardPage() {
         isCurrency: false, 
         icon: <Users size={32} />, 
         color: 'from-purple-400 to-purple-600', 
-        trend: 'Filter', 
-        isUp: true 
+        trend: customersTrendStr, 
+        isUp: !customersTrendStr.startsWith('-')
       },
       { 
         label: 'Cucian Diproses', 
