@@ -93,6 +93,10 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'tgl_pesanan', direction: 'asc' });
 
+  // Filter Month & Year States (initialized to current date)
+  const [filterMonth, setFilterMonth] = useState<number>(new Date().getMonth() + 1); // 1-12
+  const [filterYear, setFilterYear] = useState<number>(new Date().getFullYear());
+
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -125,6 +129,12 @@ export default function DashboardPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [orderSearchQuery, sortConfig]);
+
+  // Raw fetched datasets to support monthly filtering
+  const [rawOrders, setRawOrders] = useState<any[]>([]);
+  const [rawKaryawan, setRawKaryawan] = useState<any[]>([]);
+  const [rawPelanggan, setRawPelanggan] = useState<any[]>([]);
+  const [rawLayanan, setRawLayanan] = useState<any[]>([]);
   
   // Data State for Trends
   const [revenueData, setRevenueData] = useState<any>(null);
@@ -162,6 +172,12 @@ export default function DashboardPage() {
         const allOrders = ordersRes.data || [];
         const allKaryawan = karyawanRes.data || [];
         const allPelanggan = pelangganRes.data || [];
+        const allLayanan = layananRes.data || [];
+
+        setRawOrders(allOrders);
+        setRawKaryawan(allKaryawan);
+        setRawPelanggan(allPelanggan);
+        setRawLayanan(allLayanan);
 
         // 2. Process Stats
         const totalRevenue = revenueRes.monthly_revenue || 0;
@@ -358,11 +374,224 @@ export default function DashboardPage() {
     loadDashboardData();
   }, []);
 
-  // Recalculate Trend Line based on viewMode (weekly/monthly)
+  // Recalculate stats, tables, charts, and popular services based on chosen filterMonth and filterYear
+  useEffect(() => {
+    if (rawOrders.length === 0) return;
+
+    // Filter orders belonging to selected month & year
+    const filteredOrders = rawOrders.filter((ord: any) => {
+      if (!ord.tgl_pesanan) return false;
+      const orderDate = new Date(ord.tgl_pesanan);
+      return (orderDate.getMonth() + 1) === filterMonth && orderDate.getFullYear() === filterYear;
+    });
+
+    // 1. Process Stats
+    // Sum total payment of completed orders in this month
+    const totalRevenue = filteredOrders
+      .filter((ord: any) => {
+        // Only count if paid or status is Selesai
+        const history = ord.RiwayatStatusDetail || ord.riwayatStatusDetail || [];
+        const isSelesai = history.some((h: any) => {
+          const statusName = h.ReferensiStatus?.nama_status || h.ReferensiStatus?.NamaStatus || h.referensi_status?.nama_status;
+          return statusName === "Selesai";
+        });
+        const isPaid = ord.Pembayaran?.status_pembayaran === "Paid" || ord.Pembayaran?.status_pembayaran === "Lunas";
+        return isSelesai || isPaid;
+      })
+      .reduce((sum: number, ord: any) => sum + (ord.total_bayar || 0), 0);
+
+    const incomingOrdersCount = filteredOrders.length;
+
+    // Customers registered in selected month & year
+    const activeCustomersCount = rawPelanggan.filter((pel: any) => {
+      // Find customer's first order date in filtered month, or count all active customers
+      if (!pel.tgl_daftar && !pel.createdAt) return true;
+      const regDate = new Date(pel.tgl_daftar || pel.createdAt);
+      return (regDate.getMonth() + 1) === filterMonth && regDate.getFullYear() === filterYear;
+    }).length || rawPelanggan.length; // fallback to total if none registered
+
+    const processCount = filteredOrders.filter((ord: any) => {
+      const history = ord.RiwayatStatusDetail || ord.riwayatStatusDetail || [];
+      if (history.length === 0) return true;
+      const sortedHistory = [...history].sort((a, b) => {
+        const idA = a.id_riwayat_status_detail || a.id_riwayat || a.IDRiwayat || 0;
+        const idB = b.id_riwayat_status_detail || b.id_riwayat || b.IDRiwayat || 0;
+        return idA - idB;
+      });
+      const lastStatusObj = sortedHistory[sortedHistory.length - 1];
+      const refStatus = lastStatusObj.ReferensiStatus || lastStatusObj.referensiStatus;
+      const lastStatus = refStatus?.nama_status || refStatus?.NamaStatus;
+      return !["Selesai", "Batal", "Dibatalkan"].includes(lastStatus);
+    }).length;
+
+    const processedStats: StatItem[] = [
+      { 
+        label: 'Pendapatan Bulan Ini', 
+        value: totalRevenue, 
+        isCurrency: true, 
+        icon: <DollarSign size={32} />, 
+        color: 'from-emerald-400 to-emerald-600', 
+        trend: 'Filter', 
+        isUp: true
+      },
+      { 
+        label: 'Total Pesanan', 
+        value: incomingOrdersCount, 
+        isCurrency: false, 
+        icon: <ShoppingBag size={32} />, 
+        color: 'from-[#4FD1D9] to-[#2fb5bd]', 
+        trend: 'Filter', 
+        isUp: true 
+      },
+      { 
+        label: 'Pelanggan Terdaftar', 
+        value: activeCustomersCount, 
+        isCurrency: false, 
+        icon: <Users size={32} />, 
+        color: 'from-purple-400 to-purple-600', 
+        trend: 'Filter', 
+        isUp: true 
+      },
+      { 
+        label: 'Cucian Diproses', 
+        value: processCount, 
+        isCurrency: false, 
+        icon: <Clock size={32} />, 
+        color: 'from-amber-400 to-amber-600', 
+        trend: 'Aktif', 
+        isUp: true 
+      },
+    ];
+    setStats(processedStats);
+
+    // 2. Process Recent Orders list
+    const processedRecent: RecentOrder[] = filteredOrders.map((ord: any) => {
+      let statusName = "Pesanan Diterima";
+      const history = ord.RiwayatStatusDetail || ord.riwayatStatusDetail || [];
+      if (history.length > 0) {
+        const sortedHistory = [...history].sort((a, b) => {
+          const idA = a.id_riwayat_status_detail || a.id_riwayat || a.IDRiwayat || 0;
+          const idB = b.id_riwayat_status_detail || b.id_riwayat || b.IDRiwayat || 0;
+          return idA - idB;
+        });
+        const lastStatusObj = sortedHistory[sortedHistory.length - 1];
+        const refStatus = lastStatusObj.ReferensiStatus || lastStatusObj.referensiStatus || lastStatusObj.referensi_status;
+        statusName = refStatus?.nama_status || refStatus?.NamaStatus || "Pesanan Diterima";
+      }
+
+      let displayStatus = statusName;
+      if (statusName === "Batal" || statusName === "Dibatalkan") {
+        displayStatus = "Dibatalkan";
+      } else if ((ord.kuantitas || 0) <= 0) {
+        if (statusName === "Pesanan Diterima") displayStatus = "Menunggu Konfirmasi";
+        else if (statusName === "Penjemputan") displayStatus = "Menunggu Dijemput";
+        else if (statusName === "Proses Timbang") displayStatus = "Menunggu Timbang";
+      }
+
+      return {
+        id: ord.kode_order || `ORD-${ord.id_order}`,
+        customer: ord.Pelanggan?.nama_lengkap || "Pelanggan",
+        service: ord.Layanan?.nama_layanan || "Layanan",
+        status: displayStatus,
+        amount: `Rp ${(ord.total_bayar || 0).toLocaleString('id-ID')}`,
+        foto_pelanggan: ord.Pelanggan?.foto_pelanggan || "",
+        tgl_pesanan: ord.tgl_pesanan || ""
+      };
+    });
+    setRecentOrders(processedRecent);
+
+    // 3. Process Active Karyawan (Petugas Aktif in filtered orders)
+    const activeEmployees: ActiveKurir[] = rawKaryawan.map((kar: any) => {
+      const employeeId = kar.id_karyawan || kar.IDKaryawan || kar.id;
+      const activeJobs = filteredOrders.filter((ord: any) => {
+        const orderEmployeeId = ord.id_karyawan || ord.idKaryawan || ord.id_user || ord.UserID;
+        if (orderEmployeeId !== employeeId) return false;
+        
+        const history = ord.RiwayatStatusDetail || ord.riwayatStatusDetail || [];
+        if (history.length === 0) return false;
+        
+        const sortedHistory = [...history].sort((a, b) => {
+          const idA = a.id_riwayat_status_detail || a.id_riwayat || a.IDRiwayat || 0;
+          const idB = b.id_riwayat_status_detail || b.id_riwayat || b.IDRiwayat || 0;
+          return idA - idB;
+        });
+        const lastStatusObj = sortedHistory[sortedHistory.length - 1];
+        const refStatus = lastStatusObj.ReferensiStatus || lastStatusObj.referensiStatus;
+        const lastStatus = refStatus?.nama_status || refStatus?.NamaStatus;
+        
+        return !["Selesai", "Batal", "Dibatalkan"].includes(lastStatus);
+      }).length;
+
+      return {
+        name: kar.nama_karyawan || kar.NamaKaryawan || "Karyawan",
+        status: kar.status_ketersediaan || kar.StatusKetersediaan || "Tersedia",
+        orders: activeJobs,
+        foto: kar.foto_karyawan || kar.FotoKaryawan || ""
+      };
+    });
+
+    const sortedEmployees = activeEmployees
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 5);
+
+    if (sortedEmployees.length === 0) {
+      setActiveKurir([
+        { name: 'Rahmat', status: 'Tersedia', orders: 0, foto: "" },
+        { name: 'Doni', status: 'Tersedia', orders: 0, foto: "" }
+      ]);
+    } else {
+      setActiveKurir(sortedEmployees);
+    }
+
+    // 4. Popular Services filtered
+    const serviceCounts: { [key: string]: number } = {};
+    filteredOrders.forEach((ord: any) => {
+      const serviceName = ord.Layanan?.nama_layanan;
+      if (serviceName) {
+        serviceCounts[serviceName] = (serviceCounts[serviceName] || 0) + 1;
+      }
+    });
+    const totalServiceOrders = filteredOrders.length || 1;
+    const sortedServices = Object.entries(serviceCounts)
+      .map(([label, count]) => ({
+        label,
+        percent: Math.round((count / totalServiceOrders) * 100)
+      }))
+      .sort((a, b) => b.percent - a.percent);
+
+    const layananColorMap = new Map<string, string>();
+    rawLayanan.forEach((lay: any) => {
+      if (lay.nama_layanan && lay.warna_layanan) {
+        layananColorMap.set(lay.nama_layanan.toLowerCase().trim(), lay.warna_layanan);
+      }
+    });
+
+    const fallbackColors = ['#4FD1D9', '#6366f1', '#f59e0b', '#10b981', '#f43f5e', '#a855f7'];
+    const processedServices = sortedServices.map((srv, idx) => {
+      const cleanLabel = srv.label.toLowerCase().trim();
+      const dbColor = layananColorMap.get(cleanLabel);
+      return {
+        ...srv,
+        color: dbColor || fallbackColors[idx % fallbackColors.length]
+      };
+    });
+
+    if (processedServices.length === 0) {
+      setPopularServices([
+        { label: 'Cuci Kering Lipat', percent: 0, color: '#4FD1D9' },
+        { label: 'Cuci & Setrika', percent: 0, color: '#6366f1' },
+        { label: 'Setrika Saja', percent: 0, color: '#f59e0b' }
+      ]);
+    } else {
+      setPopularServices(processedServices);
+    }
+
+  }, [rawOrders, rawKaryawan, rawPelanggan, rawLayanan, filterMonth, filterYear]);
+
+  // Recalculate Trend Line based on viewMode (weekly/monthly) and chosen month/year filter
   useEffect(() => {
     if (!revenueData) return;
 
-    const today = new Date();
     const transactions = revenueData.transactions || [];
     
     if (viewMode === 'weekly') {
@@ -370,10 +599,17 @@ export default function DashboardPage() {
       const dailyRevenue = Array(7).fill(0);
       const dates: Date[] = [];
 
+      // If filtering current month/year, default weekly view to end at today. Otherwise end at last day of filtered month.
+      const today = new Date();
+      let endDate = new Date(filterYear, filterMonth, 0); // Last day of chosen month
+      if (today.getMonth() + 1 === filterMonth && today.getFullYear() === filterYear) {
+        endDate = today;
+      }
+
       for (let i = 6; i >= 0; i--) {
-        const idx = 6 - i;  // idx 0 = oldest, idx 6 = today
-        const d = new Date();
-        d.setDate(today.getDate() - i);
+        const idx = 6 - i;  // idx 0 = oldest, idx 6 = endDate
+        const d = new Date(endDate);
+        d.setDate(endDate.getDate() - i);
         daysLabel.push(d.toLocaleDateString('id-ID', { weekday: 'short' }));
         dates.push(d);
         
@@ -401,8 +637,8 @@ export default function DashboardPage() {
       setSvgPoints(points);
 
     } else {
-      // Monthly: current month days
-      const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      // Monthly: chosen month days
+      const daysInMonth = new Date(filterYear, filterMonth, 0).getDate();
       const dailyRevenue = Array(daysInMonth).fill(0);
       const dates: Date[] = [];
       
@@ -415,7 +651,7 @@ export default function DashboardPage() {
           labels.push("");
         }
 
-        const d = new Date(today.getFullYear(), today.getMonth(), i);
+        const d = new Date(filterYear, filterMonth - 1, i);
         dates.push(d);
 
         const dateStr = d.toDateString();
@@ -444,7 +680,7 @@ export default function DashboardPage() {
       setSvgPoints(points);
     }
 
-  }, [revenueData, viewMode]);
+  }, [revenueData, viewMode, filterMonth, filterYear]);
 
   // Generate SVG Path whenever points update
   useEffect(() => {
@@ -480,7 +716,40 @@ export default function DashboardPage() {
             Dashboard
           </h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Month Selector Dropdown */}
+          <select 
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(Number(e.target.value))}
+            className="px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer focus:border-[#4FD1D9]"
+          >
+            {Array.from({ length: 12 }, (_, i) => {
+              const date = new Date(2026, i, 1);
+              const monthName = date.toLocaleDateString('id-ID', { month: 'long' });
+              return (
+                <option key={i + 1} value={i + 1}>
+                  {monthName}
+                </option>
+              );
+            })}
+          </select>
+
+          {/* Year Selector Dropdown */}
+          <select
+            value={filterYear}
+            onChange={(e) => setFilterYear(Number(e.target.value))}
+            className="px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer focus:border-[#4FD1D9]"
+          >
+            {[-2, -1, 0, 1].map((offset) => {
+              const yr = new Date().getFullYear() + offset;
+              return (
+                <option key={yr} value={yr}>
+                  Tahun {yr}
+                </option>
+              );
+            })}
+          </select>
+
           <div className="px-3.5 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-[#1e3a5f] flex items-center gap-2">
             <Calendar size={14} className="text-[#4FD1D9]" />
             {currentTime ? (
