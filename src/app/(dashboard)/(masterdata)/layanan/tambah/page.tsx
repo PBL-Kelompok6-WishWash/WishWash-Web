@@ -124,6 +124,17 @@ export default function TambahLayananPage() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isJenisSatuanOpen, setIsJenisSatuanOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+  React.useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsJenisSatuanOpen(false);
+      setIsStatusOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -324,32 +335,87 @@ export default function TambahLayananPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-[#1e3a5f] ml-1">Jenis Satuan <span className="text-red-500">*</span></label>
-                <select 
-                  value={formData.jenis_satuan}
-                  onChange={(e) => setFormData({...formData, jenis_satuan: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] bg-white text-[#1e3a5f] font-medium cursor-pointer transition-all"
-                >
-                  <option value="Kg">Kg</option>
-                  <option value="Pcs">Pcs</option>
-                  <option value="Meter">Meter</option>
-                  <option value="Pasang">Pasang</option>
-                </select>
+                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsJenisSatuanOpen(!isJenisSatuanOpen);
+                      setIsStatusOpen(false);
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-white text-[#1e3a5f] font-medium flex items-center justify-between transition-all hover:border-[#4FD1D9]/60 focus:border-[#4FD1D9] focus:outline-none"
+                  >
+                    <span>{formData.jenis_satuan}</span>
+                    <ChevronDown size={18} className={`transition-transform duration-300 ${isJenisSatuanOpen ? 'rotate-180' : 'rotate-0'}`} />
+                  </button>
+                  
+                  {isJenisSatuanOpen && (
+                    <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                      {["Kg", "Pcs", "Meter", "Pasang"].map(val => {
+                        const isSelected = formData.jenis_satuan === val;
+                        return (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, jenis_satuan: val });
+                              setIsJenisSatuanOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all duration-150 flex items-center justify-between ${
+                              isSelected 
+                                ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                            }`}
+                          >
+                            <span>{val}</span>
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-[#1e3a5f] ml-1">Status Layanan</label>
-                <div className="relative">
-                  <select 
-                    value={formData.status_layanan}
-                    onChange={(e) => setFormData({...formData, status_layanan: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all appearance-none bg-white"
+                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsStatusOpen(!isStatusOpen);
+                      setIsJenisSatuanOpen(false);
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-white text-[#1e3a5f] font-medium flex items-center justify-between transition-all hover:border-[#4FD1D9]/60 focus:border-[#4FD1D9] focus:outline-none"
                   >
-                    <option value="Aktif">Aktif</option>
-                    <option value="Tidak Aktif">Tidak Aktif</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
-                    <ChevronDown size={18} />
-                  </div>
+                    <span>{formData.status_layanan}</span>
+                    <ChevronDown size={18} className={`transition-transform duration-300 ${isStatusOpen ? 'rotate-180' : 'rotate-0'}`} />
+                  </button>
+                  
+                  {isStatusOpen && (
+                    <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                      {["Aktif", "Tidak Aktif"].map(val => {
+                        const isSelected = formData.status_layanan === val;
+                        return (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, status_layanan: val });
+                              setIsStatusOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all duration-150 flex items-center justify-between ${
+                              isSelected 
+                                ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                            }`}
+                          >
+                            <span>{val}</span>
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 

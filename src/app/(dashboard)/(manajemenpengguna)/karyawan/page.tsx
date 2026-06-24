@@ -54,6 +54,15 @@ export default function KaryawanPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isRowsOpen, setIsRowsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsRowsOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({
     key: 'id_karyawan',
@@ -198,20 +207,50 @@ export default function KaryawanPage() {
                 placeholder="Cari..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] text-sm font-medium transition-colors"
+                className="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] text-xs font-medium transition-colors"
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <select
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                className="px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] text-sm font-bold cursor-pointer transition-colors appearance-none bg-white"
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRowsOpen(!isRowsOpen);
+                }}
+                className="flex items-center justify-between w-32 px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer transition-all duration-300 hover:border-[#4FD1D9]/60 hover:shadow-md hover:shadow-slate-100 focus:border-[#4FD1D9] focus:ring-2 focus:ring-[#4FD1D9]/20"
               >
-                {[5, 10, 25, 50].map(num => (
-                  <option key={num} value={num}>{num} Baris</option>
-                ))}
-              </select>
+                <span>{itemsPerPage} Baris</span>
+                <ChevronDown 
+                  size={14} 
+                  className={`text-[#1e3a5f] transition-transform duration-300 ${isRowsOpen ? 'rotate-180' : 'rotate-0'}`} 
+                />
+              </button>
+              
+              {isRowsOpen && (
+                <div className="absolute left-0 mt-2 w-32 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                  {[5, 10, 25, 50].map(num => {
+                    const isSelected = itemsPerPage === num;
+                    return (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => {
+                          setItemsPerPage(num);
+                          setIsRowsOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
+                          isSelected 
+                            ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                        }`}
+                      >
+                        <span>{num} Baris</span>
+                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 

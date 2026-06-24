@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  ArrowLeft, Save, User, Mail, Lock, Phone, UserCircle, Image as ImageIcon, X, Truck, Tag, Hash
+  ArrowLeft, Save, User, Mail, Lock, Phone, UserCircle, Image as ImageIcon, X, Truck, Tag, Hash, ChevronDown
 } from 'lucide-react';
 import { karyawanService } from '@/services/karyawanService';
 import SplashScreen from '@/app/components/SplashScreen';
@@ -14,6 +14,17 @@ export default function TambahKaryawanPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [isJenisOpen, setIsJenisOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsJenisOpen(false);
+      setIsStatusOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
 
   const [formData, setFormData] = useState({
     nama_karyawan: "",
@@ -220,39 +231,93 @@ export default function TambahKaryawanPage() {
             
             <div className="space-y-2">
               <label className="text-sm font-bold text-[#1e3a5f] ml-1">Jenis Kendaraan</label>
-              <div className="relative">
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Truck size={18} className="text-slate-400" />
                 </div>
-                <select
-                  name="jenis_kendaraan"
-                  value={formData.jenis_kendaraan}
-                  onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all appearance-none cursor-pointer bg-white"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsJenisOpen(!isJenisOpen);
+                    setIsStatusOpen(false);
+                  }}
+                  className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-slate-100 bg-white text-[#1e3a5f] font-medium flex items-center justify-between transition-all hover:border-[#4FD1D9]/60 focus:border-[#4FD1D9] focus:outline-none text-left"
                 >
-                  <option value="Motor">Motor</option>
-                  <option value="Mobil">Mobil</option>
-                  <option value="Pick Up">Pick Up</option>
-                </select>
+                  <span>{formData.jenis_kendaraan}</span>
+                  <ChevronDown size={18} className={`transition-transform duration-300 ${isJenisOpen ? 'rotate-180' : 'rotate-0'}`} />
+                </button>
+                
+                {isJenisOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                    {["Motor", "Mobil", "Pick Up"].map(val => {
+                      const isSelected = formData.jenis_kendaraan === val;
+                      return (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, jenis_kendaraan: val });
+                            setIsJenisOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all duration-150 flex items-center justify-between ${
+                            isSelected 
+                              ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                          }`}
+                        >
+                          <span>{val}</span>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
             
             <div className="space-y-2">
               <label className="text-sm font-bold text-[#1e3a5f] ml-1">Status Ketersediaan</label>
-              <div className="relative">
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Tag size={18} className="text-slate-400" />
                 </div>
-                <select
-                  name="status_ketersediaan"
-                  value={formData.status_ketersediaan}
-                  onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all appearance-none cursor-pointer bg-white"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsStatusOpen(!isStatusOpen);
+                    setIsJenisOpen(false);
+                  }}
+                  className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-slate-100 bg-white text-[#1e3a5f] font-medium flex items-center justify-between transition-all hover:border-[#4FD1D9]/60 focus:border-[#4FD1D9] focus:outline-none text-left"
                 >
-                  <option value="Tersedia">Tersedia</option>
-                  <option value="Sibuk">Sibuk</option>
-                  <option value="Cuti">Cuti</option>
-                </select>
+                  <span>{formData.status_ketersediaan}</span>
+                  <ChevronDown size={18} className={`transition-transform duration-300 ${isStatusOpen ? 'rotate-180' : 'rotate-0'}`} />
+                </button>
+                
+                {isStatusOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                    {["Tersedia", "Sibuk", "Cuti"].map(val => {
+                      const isSelected = formData.status_ketersediaan === val;
+                      return (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, status_ketersediaan: val });
+                            setIsStatusOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all duration-150 flex items-center justify-between ${
+                            isSelected 
+                              ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                          }`}
+                        >
+                          <span>{val}</span>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

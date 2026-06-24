@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -14,6 +14,17 @@ export default function TambahMetodePembayaranPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [isTipeOpen, setIsTipeOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsTipeOpen(false);
+      setIsStatusOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
   
   const [formData, setFormData] = useState({
     nama_metode: '',
@@ -100,12 +111,47 @@ export default function TambahMetodePembayaranPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-[#1e3a5f] ml-1">Tipe Metode</label>
-                <div className="relative">
-                  <select value={formData.tipe_metode} onChange={(e) => setFormData({...formData, tipe_metode: e.target.value})} className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-[#4FD1D9] appearance-none bg-white text-[#1e3a5f] font-medium">
-                    <option value="Tunai">Tunai (Cash)</option>
-                    <option value="Midtrans">Midtrans Gateway</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400"><ChevronDown size={18} /></div>
+                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsTipeOpen(!isTipeOpen);
+                      setIsStatusOpen(false);
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-white text-[#1e3a5f] font-medium flex items-center justify-between transition-all hover:border-[#4FD1D9]/60 focus:border-[#4FD1D9] focus:outline-none"
+                  >
+                    <span>{formData.tipe_metode === 'Tunai' ? 'Tunai (Cash)' : 'Midtrans Gateway'}</span>
+                    <ChevronDown size={18} className={`transition-transform duration-300 ${isTipeOpen ? 'rotate-180' : 'rotate-0'}`} />
+                  </button>
+                  
+                  {isTipeOpen && (
+                    <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                      {[
+                        { val: 'Tunai', label: 'Tunai (Cash)' },
+                        { val: 'Midtrans', label: 'Midtrans Gateway' }
+                      ].map(item => {
+                        const isSelected = formData.tipe_metode === item.val;
+                        return (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, tipe_metode: item.val });
+                              setIsTipeOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all duration-150 flex items-center justify-between ${
+                              isSelected 
+                                ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                            }`}
+                          >
+                            <span>{item.label}</span>
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -122,12 +168,44 @@ export default function TambahMetodePembayaranPage() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-[#1e3a5f] ml-1">Status</label>
-                <div className="relative">
-                  <select value={formData.status_metode} onChange={(e) => setFormData({...formData, status_metode: e.target.value})} className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:border-[#4FD1D9] appearance-none bg-white text-[#1e3a5f] font-medium">
-                    <option value="Aktif">Aktif</option>
-                    <option value="Tidak Aktif">Tidak Aktif</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400"><ChevronDown size={18} /></div>
+                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsStatusOpen(!isStatusOpen);
+                      setIsTipeOpen(false);
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-white text-[#1e3a5f] font-medium flex items-center justify-between transition-all hover:border-[#4FD1D9]/60 focus:border-[#4FD1D9] focus:outline-none"
+                  >
+                    <span>{formData.status_metode}</span>
+                    <ChevronDown size={18} className={`transition-transform duration-300 ${isStatusOpen ? 'rotate-180' : 'rotate-0'}`} />
+                  </button>
+                  
+                  {isStatusOpen && (
+                    <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                      {["Aktif", "Tidak Aktif"].map(val => {
+                        const isSelected = formData.status_metode === val;
+                        return (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, status_metode: val });
+                              setIsStatusOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all duration-150 flex items-center justify-between ${
+                              isSelected 
+                                ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                            }`}
+                          >
+                            <span>{val}</span>
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 

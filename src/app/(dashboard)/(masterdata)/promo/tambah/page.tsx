@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Save, TicketPercent, Tag, AlignLeft, CalendarRange,
-  Percent, BadgeDollarSign, Image as ImageIcon, X
+  Percent, BadgeDollarSign, Image as ImageIcon, X, ChevronDown
 } from 'lucide-react';
 import { promoService } from '@/services/promoService';
 import SplashScreen from '@/app/components/SplashScreen';
@@ -21,6 +21,17 @@ export default function TambahPromoPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [preview, setPreview] = useState<string | null>(null);
+  const [isTipeOpen, setIsTipeOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsTipeOpen(false);
+      setIsStatusOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
 
   // raw angka untuk nominal potongan, tanpa simbol
   const [nominalRaw, setNominalRaw] = useState('');
@@ -184,13 +195,48 @@ export default function TambahPromoPage() {
             {/* Tipe Promo */}
             <div className="space-y-2">
               <label className={lbl}>Tipe Promo <span className="text-red-500">*</span></label>
-              <div className="relative">
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
                 <div className={ic}><Percent size={18} className="text-slate-400" /></div>
-                <select value={formData.tipe_promo} onChange={e => handleTipeChange(e.target.value)}
-                  className={inp + " appearance-none cursor-pointer"}>
-                  <option value="Persentase">Persentase (%)</option>
-                  <option value="Nominal">Nominal (Rp)</option>
-                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTipeOpen(!isTipeOpen);
+                    setIsStatusOpen(false);
+                  }}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-100 bg-white text-[#1e3a5f] font-medium flex items-center justify-between transition-all hover:border-[#4FD1D9]/60 focus:border-[#4FD1D9] focus:outline-none text-left"
+                >
+                  <span>{formData.tipe_promo === 'Persentase' ? 'Persentase (%)' : 'Nominal (Rp)'}</span>
+                  <ChevronDown size={16} className={`transition-transform duration-300 ${isTipeOpen ? 'rotate-180' : 'rotate-0'} text-[#1e3a5f]`} />
+                </button>
+                
+                {isTipeOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                    {[
+                      { val: 'Persentase', label: 'Persentase (%)' },
+                      { val: 'Nominal', label: 'Nominal (Rp)' }
+                    ].map(item => {
+                      const isSelected = formData.tipe_promo === item.val;
+                      return (
+                        <button
+                          key={item.val}
+                          type="button"
+                          onClick={() => {
+                            handleTipeChange(item.val);
+                            setIsTipeOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all duration-150 flex items-center justify-between ${
+                            isSelected 
+                              ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -271,14 +317,45 @@ export default function TambahPromoPage() {
             {/* Status */}
             <div className="space-y-2">
               <label className={lbl}>Status Promo <span className="text-red-500">*</span></label>
-              <div className="relative">
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
                 <div className={ic}><TicketPercent size={18} className="text-slate-400" /></div>
-                <select value={formData.status_promo}
-                  onChange={e => setFormData({ ...formData, status_promo: e.target.value })}
-                  className={inp + " appearance-none cursor-pointer"}>
-                  <option value="Aktif">Aktif</option>
-                  <option value="Tidak Aktif">Tidak Aktif</option>
-                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsStatusOpen(!isStatusOpen);
+                    setIsTipeOpen(false);
+                  }}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-100 bg-white text-[#1e3a5f] font-medium flex items-center justify-between transition-all hover:border-[#4FD1D9]/60 focus:border-[#4FD1D9] focus:outline-none text-left"
+                >
+                  <span>{formData.status_promo}</span>
+                  <ChevronDown size={16} className={`transition-transform duration-300 ${isStatusOpen ? 'rotate-180' : 'rotate-0'} text-[#1e3a5f]`} />
+                </button>
+                
+                {isStatusOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                    {['Aktif', 'Tidak Aktif'].map(val => {
+                      const isSelected = formData.status_promo === val;
+                      return (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, status_promo: val });
+                            setIsStatusOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all duration-150 flex items-center justify-between ${
+                            isSelected 
+                              ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                          }`}
+                        >
+                          <span>{val}</span>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

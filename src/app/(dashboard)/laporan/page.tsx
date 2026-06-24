@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { motion, animate } from 'framer-motion';
 import { 
   BarChart3, TrendingUp, DollarSign, Package, 
   Users, Calendar, Clock, CreditCard, ChevronRight, ChevronLeft,
@@ -31,6 +32,25 @@ const formatYAxisValue = (val: number) => {
   return `Rp ${val}`;
 };
 
+// Komponen Animasi Angka Berputar (Counter)
+function Counter({ value, isCurrency = false }: { value: number, isCurrency?: boolean }) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const controls = animate(0, value, {
+      duration: 1.5,
+      ease: "easeOut",
+      onUpdate: (latest) => setDisplayValue(Math.floor(latest))
+    });
+    return () => controls.stop();
+  }, [value]);
+
+  if (isCurrency) {
+    return <span>Rp {displayValue.toLocaleString('id-ID')}</span>;
+  }
+  return <span>{displayValue.toLocaleString('id-ID')}</span>;
+};
+
 export default function LaporanPage() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -50,6 +70,19 @@ export default function LaporanPage() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [cashRatio, setCashRatio] = useState(0);
   const [digitalRatio, setDigitalRatio] = useState(0);
+  const [isMonthOpen, setIsMonthOpen] = useState(false);
+  const [isYearOpen, setIsYearOpen] = useState(false);
+  const [isRowsOpen, setIsRowsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsMonthOpen(false);
+      setIsYearOpen(false);
+      setIsRowsOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
   const [hoveredBar, setHoveredBar] = useState<any>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [printDateTime, setPrintDateTime] = useState('');
@@ -170,6 +203,7 @@ export default function LaporanPage() {
 
   // Chart state
   const [svgChartBars, setSvgChartBars] = useState<{x: number, y: number, height: number, day: number, amount: number}[]>([]);
+  const [chartType, setChartType] = useState<'area' | 'bar'>('area');
 
   const months = [
     { value: 1, label: 'Januari' },
@@ -255,6 +289,35 @@ export default function LaporanPage() {
   const currentItems = filteredTransactions.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage) || 1;
 
+  const maxSalesDay = React.useMemo(() => {
+    if (!svgChartBars || svgChartBars.length === 0) return null;
+    let maxVal = -1;
+    let bestDay = null;
+    svgChartBars.forEach(b => {
+      if (b.amount > maxVal) {
+        maxVal = b.amount;
+        bestDay = b;
+      }
+    });
+    return bestDay && bestDay.amount > 0 ? bestDay : null;
+  }, [svgChartBars]);
+
+  const areaPaths = React.useMemo(() => {
+    if (!svgChartBars || svgChartBars.length === 0) return { linePath: "", areaPath: "" };
+    let linePath = `M ${svgChartBars[0].x} ${svgChartBars[0].y}`;
+    for (let i = 1; i < svgChartBars.length; i++) {
+      const prev = svgChartBars[i-1];
+      const curr = svgChartBars[i];
+      const cpX1 = prev.x + (curr.x - prev.x) / 3;
+      const cpY1 = prev.y;
+      const cpX2 = curr.x - (curr.x - prev.x) / 3;
+      const cpY2 = curr.y;
+      linePath += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${curr.x} ${curr.y}`;
+    }
+    const areaPath = `${linePath} L ${svgChartBars[svgChartBars.length - 1].x} 160 L ${svgChartBars[0].x} 160 Z`;
+    return { linePath, areaPath };
+  }, [svgChartBars]);
+
   return (
     <>
       {/* Halaman Dashboard Biasa (Hidden on print) */}
@@ -273,26 +336,88 @@ export default function LaporanPage() {
         {/* Filter Toolbar */}
         <div className="flex flex-wrap items-center gap-3 bg-white p-2 border border-slate-200 rounded-2xl shadow-sm">
           {/* Month Dropdown */}
-          <select 
-            value={month} 
-            onChange={(e) => setMonth(Number(e.target.value))}
-            className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-sm font-bold text-[#1e3a5f] rounded-xl focus:outline-none transition-colors cursor-pointer appearance-none border border-slate-200/50"
-          >
-            {months.map(m => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => {
+                setIsMonthOpen(!isMonthOpen);
+                setIsYearOpen(false);
+              }}
+              className="flex items-center justify-between w-44 px-4 py-2.5 bg-slate-50 border border-slate-200/50 rounded-xl text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer transition-all duration-300 hover:border-[#4FD1D9]/60 hover:bg-white"
+            >
+              <span>{months.find(m => m.value === month)?.label || 'Januari'}</span>
+              <ChevronDown 
+                size={14} 
+                className={`text-[#1e3a5f] transition-transform duration-300 ${isMonthOpen ? 'rotate-180' : 'rotate-0'}`} 
+              />
+            </button>
+            
+            {isMonthOpen && (
+              <div className="absolute left-0 mt-2 w-44 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 max-h-60 overflow-y-auto transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                {months.map(m => {
+                  const isSelected = month === m.value;
+                  return (
+                    <button
+                      key={m.value}
+                      onClick={() => {
+                        setMonth(m.value);
+                        setIsMonthOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
+                        isSelected 
+                          ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                      }`}
+                    >
+                      <span>{m.label}</span>
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Year Dropdown */}
-          <select 
-            value={year} 
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-sm font-bold text-[#1e3a5f] rounded-xl focus:outline-none transition-colors cursor-pointer appearance-none border border-slate-200/50"
-          >
-            {years.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => {
+                setIsYearOpen(!isYearOpen);
+                setIsMonthOpen(false);
+              }}
+              className="flex items-center justify-between w-36 px-4 py-2.5 bg-slate-50 border border-slate-200/50 rounded-xl text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer transition-all duration-300 hover:border-[#4FD1D9]/60 hover:bg-white"
+            >
+              <span>{year}</span>
+              <ChevronDown 
+                size={14} 
+                className={`text-[#1e3a5f] transition-transform duration-300 ${isYearOpen ? 'rotate-180' : 'rotate-0'}`} 
+              />
+            </button>
+            
+            {isYearOpen && (
+              <div className="absolute left-0 mt-2 w-36 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                {years.map(y => {
+                  const isSelected = year === y;
+                  return (
+                    <button
+                      key={y}
+                      onClick={() => {
+                        setYear(y);
+                        setIsYearOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
+                        isSelected 
+                          ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                      }`}
+                    >
+                      <span>{y}</span>
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           <button 
             onClick={() => window.print()}
@@ -307,12 +432,18 @@ export default function LaporanPage() {
       {/* Metrics Summary Card */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Pendapatan Bulan Ini', value: `Rp ${monthlyRevenue.toLocaleString('id-ID')}`, icon: <DollarSign className="text-emerald-500" />, sub: `Akumulasi bulan ${months[month-1].label}`, color: "emerald" },
-          { label: 'Total Pendapatan Bersih', value: `Rp ${accumulatedRevenue.toLocaleString('id-ID')}`, icon: <TrendingUp className="text-[#4FD1D9]" />, sub: 'Total omset berjalan', color: "cyan" },
-          { label: 'Rata-rata Harian', value: `Rp ${Math.round(monthlyRevenue / (new Date(year, month, 0).getDate())).toLocaleString('id-ID')}`, icon: <Clock className="text-purple-500" />, sub: 'Estimasi harian', color: "purple" },
-          { label: 'Transaksi Bulan Ini', value: `${transactions.length} Order`, icon: <Package className="text-amber-500" />, sub: 'Status lunas/paid', color: "amber" },
+          { label: 'Pendapatan Bulan Ini', numericValue: monthlyRevenue, isCurrency: true, suffix: '', icon: <DollarSign className="text-emerald-500" />, sub: `Akumulasi bulan ${months[month-1].label}`, color: "emerald" },
+          { label: 'Total Pendapatan Bersih', numericValue: Math.round(monthlyRevenue * 0.85), isCurrency: true, suffix: '', icon: <TrendingUp className="text-[#4FD1D9]" />, sub: 'Estimasi bersih (85% omset)', color: "cyan" },
+          { label: 'Rata-rata Harian', numericValue: Math.round(monthlyRevenue / (new Date(year, month, 0).getDate() || 30)), isCurrency: true, suffix: '', icon: <Clock className="text-purple-500" />, sub: 'Estimasi harian', color: "purple" },
+          { label: 'Transaksi Bulan Ini', numericValue: transactions.length, isCurrency: false, suffix: ' Order', icon: <Package className="text-amber-500" />, sub: 'Status lunas/paid', color: "amber" },
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-300">
+          <motion.div 
+            key={i} 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-white p-6 rounded-3xl border border-slate-200 shadow-md shadow-slate-200/50 relative overflow-hidden group hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300"
+          >
             <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-slate-50 rounded-2xl group-hover:scale-110 transition-transform duration-300">
                 {stat.icon}
@@ -322,7 +453,9 @@ export default function LaporanPage() {
               </span>
             </div>
             <p className="text-slate-400 text-[10px] font-black uppercase tracking-wider mb-1">{stat.label}</p>
-            <h3 className="text-2xl font-black text-[#1e3a5f] mb-1">{stat.value}</h3>
+            <h3 className="text-2xl font-black text-[#1e3a5f] mb-1">
+              <Counter value={stat.numericValue} isCurrency={stat.isCurrency} />{stat.suffix}
+            </h3>
             <p className="text-xs text-slate-400 font-medium">{stat.sub}</p>
             <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${
               stat.color === 'emerald' ? 'from-emerald-400 to-teal-500' :
@@ -330,22 +463,80 @@ export default function LaporanPage() {
               stat.color === 'purple' ? 'from-purple-400 to-indigo-500' :
               'from-amber-400 to-orange-500'
             } opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {/* Charts & Split Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Daily Bar Chart */}
-        <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-slate-100 shadow-2xl shadow-slate-200/40 flex flex-col justify-between hover:shadow-2xl transition-all duration-300">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-black text-[#1e3a5f] uppercase tracking-wide">Grafik Penjualan Harian</h3>
-            <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md tracking-wider uppercase">
-              {months[month-1].label} {year}
-            </span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">        {/* Daily Chart Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-md shadow-slate-200/50 flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative group"
+        >
+          {/* Card Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4">
+            <div>
+              <h3 className="text-lg font-black text-[#1e3a5f] uppercase tracking-wide flex items-center gap-2">
+                <BarChart3 className="text-[#4FD1D9]" size={20} />
+                Tren Penjualan Harian
+              </h3>
+              <p className="text-slate-400 text-xs font-semibold mt-0.5">
+                Monitoring grafik omset harian pada {months[month-1].label} {year}
+              </p>
+            </div>
+
+            {/* Chart Type Toggle */}
+            <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100 self-start sm:self-center">
+              <button
+                type="button"
+                onClick={() => setChartType('area')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  chartType === 'area'
+                    ? 'bg-[#1e3a5f] text-white shadow-md'
+                    : 'text-slate-500 hover:text-[#1e3a5f] hover:bg-slate-100'
+                }`}
+              >
+                <TrendingUp size={14} />
+                Area
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartType('bar')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  chartType === 'bar'
+                    ? 'bg-[#1e3a5f] text-white shadow-md'
+                    : 'text-slate-500 hover:text-[#1e3a5f] hover:bg-slate-100'
+                }`}
+              >
+                <BarChart3 size={14} />
+                Batang
+              </button>
+            </div>
           </div>
 
+          {/* Quick Metrics Sub-Header */}
+          <div className="grid grid-cols-3 gap-2 bg-slate-50/50 p-3.5 rounded-2xl border border-slate-100 mb-6">
+            <div className="border-r border-slate-200 last:border-0 pr-2">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Total Omset</p>
+              <p className="text-sm font-extrabold text-[#1e3a5f] mt-0.5">Rp {monthlyRevenue.toLocaleString('id-ID')}</p>
+            </div>
+            <div className="border-r border-slate-200 last:border-0 px-2">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Rata-rata</p>
+              <p className="text-sm font-extrabold text-[#1e3a5f] mt-0.5">
+                Rp {Math.round(monthlyRevenue / (svgChartBars.length || 30)).toLocaleString('id-ID')}
+              </p>
+            </div>
+            <div className="last:border-0 pl-2">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Hari Puncak</p>
+              <p className="text-sm font-extrabold text-emerald-600 truncate mt-0.5">
+                {maxSalesDay ? `Tgl ${maxSalesDay.day} (${Math.round(maxSalesDay.amount / 1000)}K)` : '-'}
+              </p>
+            </div>
+          </div>
+
+          {/* Chart Display Area */}
           <div className="h-64 w-full relative flex items-end">
             {isLoading ? (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -359,6 +550,14 @@ export default function LaporanPage() {
               <div className="w-full h-full relative">
                 <svg className="w-full h-full overflow-visible" viewBox="0 0 600 200" preserveAspectRatio="none">
                   <defs>
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#4FD1D9" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#4FD1D9" stopOpacity="0.0" />
+                    </linearGradient>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#4FD1D9" />
+                      <stop offset="100%" stopColor="#1e3a5f" />
+                    </linearGradient>
                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#4FD1D9" />
                       <stop offset="100%" stopColor="#1e3a5f" />
@@ -367,26 +566,12 @@ export default function LaporanPage() {
                       <stop offset="0%" stopColor="#2fb5bd" />
                       <stop offset="100%" stopColor="#0f1e33" />
                     </linearGradient>
-                    <filter id="barShadow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodColor="#4FD1D9" floodOpacity="0.2" />
+                    <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#4FD1D9" floodOpacity="0.4" />
                     </filter>
                   </defs>
 
-                  {/* Vertical grid lines for each day */}
-                  {svgChartBars.map((bar, idx) => (
-                    <line 
-                      key={`v-grid-${idx}`} 
-                      x1={bar.x} 
-                      y1="25" 
-                      x2={bar.x} 
-                      y2="160" 
-                      stroke="#f1f5f9" 
-                      strokeWidth="1" 
-                      strokeDasharray="2 3"
-                    />
-                  ))}
-
-                  {/* Horizontal grid lines based on price ticks */}
+                  {/* Horizontal dotted grid lines */}
                   {(() => {
                     const step = calcChartStep(maxRevenue);
                     const ticks: number[] = [];
@@ -402,17 +587,17 @@ export default function LaporanPage() {
                             x2="585" 
                             y1={yPos} 
                             y2={yPos} 
-                            stroke="#cbd5e1" 
+                            stroke="#e2e8f0" 
                             strokeWidth="1" 
                             strokeDasharray="4 4" 
-                            opacity="0.3"
+                            opacity="0.6"
                           />
                           <text 
                             x="45" 
                             y={yPos} 
                             textAnchor="end" 
                             dominantBaseline="middle" 
-                            className="fill-slate-400 font-normal text-[8px]"
+                            className="fill-slate-400 font-bold text-[8px]"
                           >
                             {formatYAxisValue(val)}
                           </text>
@@ -427,80 +612,121 @@ export default function LaporanPage() {
                     y="160" 
                     textAnchor="end" 
                     dominantBaseline="middle" 
-                    className="fill-slate-400 font-normal text-[8px]"
+                    className="fill-slate-400 font-bold text-[8px]"
                   >
                     Rp 0
                   </text>
 
-                  {/* Solid axis lines */}
-                  <line x1="55" y1="160" x2="585" y2="160" stroke="#cbd5e1" strokeWidth="1.5" />
-                  <line x1="55" y1="25"  x2="55"  y2="160" stroke="#cbd5e1" strokeWidth="1.5" />
+                  {/* Axis lines */}
+                  <line x1="55" y1="160" x2="585" y2="160" stroke="#cbd5e1" strokeWidth="1" opacity="0.5" />
 
-                   {/* X-axis labels centered below grid points natively */}
-                   {svgChartBars.map((bar, idx) => {
-                     const day = bar.day;
-                     const isLastDay = day === svgChartBars.length;
-                     const shouldShowLabel = day === 1 || day === 5 || day === 10 || day === 15 || day === 20 || day === 25 || day === 30 || isLastDay;
-                     if (!shouldShowLabel) return null;
-                     return (
-                       <text 
-                         key={`x-label-${idx}`}
-                         x={bar.x} 
-                         y="180" 
-                         textAnchor="middle" 
-                         className="fill-slate-400 font-extrabold text-[7.5px]"
-                       >
-                         Tgl {day}
-                       </text>
-                     );
-                   })}
-
-                  {/* Bars */}
+                  {/* X-axis labels centered below grid points */}
                   {svgChartBars.map((bar, idx) => {
-                    const isHovered = hoveredBar && hoveredBar.day === bar.day;
-                    const isSelected = selectedDay === bar.day;
+                    const day = bar.day;
+                    const isLastDay = day === svgChartBars.length;
+                    const shouldShowLabel = day === 1 || day === 5 || day === 10 || day === 15 || day === 20 || day === 25 || day === 30 || isLastDay;
+                    if (!shouldShowLabel) return null;
                     return (
-                      <g key={idx} className="group/bar">
-                        {/* Soft backdrop ray on hover */}
-                        {(isHovered || isSelected) && (
-                          <rect 
-                            x={bar.x - 12}
-                            y={25}
-                            width="24"
-                            height={135}
-                            fill="#4FD1D9"
-                            opacity={isSelected ? 0.12 : 0.06}
-                            rx="6"
+                      <text 
+                        key={`x-label-${idx}`}
+                        x={bar.x} 
+                        y="180" 
+                        textAnchor="middle" 
+                        className="fill-slate-400 font-black text-[8px]"
+                      >
+                        Tgl {day}
+                      </text>
+                    );
+                  })}
+
+                  {/* Chart representation: AREA or BAR */}
+                  {chartType === 'area' ? (
+                    <>
+                      {/* Area under the line */}
+                      <path 
+                        d={areaPaths.areaPath} 
+                        fill="url(#areaGradient)" 
+                        className="transition-all duration-300 animate-in fade-in"
+                      />
+                      
+                      {/* Stroke line */}
+                      <path 
+                        d={areaPaths.linePath} 
+                        fill="none" 
+                        stroke="url(#lineGradient)" 
+                        strokeWidth="3" 
+                        strokeLinecap="round"
+                        className="transition-all duration-300"
+                      />
+
+                      {/* Glowing interactive dots */}
+                      {svgChartBars.map((bar, idx) => {
+                        const isHovered = hoveredBar && hoveredBar.day === bar.day;
+                        const isSelected = selectedDay === bar.day;
+                        if (bar.amount === 0) return null;
+                        return (
+                          <circle 
+                            key={`dot-${idx}`}
+                            cx={bar.x}
+                            cy={bar.y}
+                            r={isHovered || isSelected ? 6 : 4}
+                            fill={isHovered || isSelected ? "#4FD1D9" : "#1e3a5f"}
+                            stroke="#ffffff"
+                            strokeWidth={1.5}
+                            filter={isHovered || isSelected ? "url(#glowFilter)" : "none"}
+                            className="transition-all duration-150 pointer-events-none"
                           />
-                        )}
+                        );
+                      })}
+                    </>
+                  ) : (
+                    /* Bar Representation */
+                    svgChartBars.map((bar, idx) => {
+                      const isHovered = hoveredBar && hoveredBar.day === bar.day;
+                      const isSelected = selectedDay === bar.day;
+                      return (
+                        <g key={`bar-group-${idx}`}>
+                          {/* Soft backdrop ray on hover */}
+                          {(isHovered || isSelected) && (
+                            <rect 
+                              x={bar.x - 8}
+                              y={25}
+                              width="16"
+                              height={135}
+                              fill="#4FD1D9"
+                              opacity={isSelected ? 0.12 : 0.06}
+                              rx="4"
+                            />
+                          )}
+                          <rect 
+                            x={bar.x - 5} 
+                            y={bar.y} 
+                            width="10" 
+                            height={bar.height} 
+                            fill={isSelected ? "url(#activeBarGradient)" : isHovered ? "url(#activeBarGradient)" : "url(#barGradient)"} 
+                            rx="3"
+                            className="pointer-events-none transition-all duration-200"
+                          />
+                        </g>
+                      );
+                    })
+                  )}
 
-                        {/* Transparent hover target */}
-                        <rect
-                          x={bar.x - 10}
-                          y={0}
-                          width="20"
-                          height={200}
-                          fill="transparent"
-                          className="cursor-pointer"
-                          onMouseEnter={() => setHoveredBar(bar)}
-                          onMouseLeave={() => setHoveredBar(null)}
-                          onClick={() => setSelectedDay(prev => prev === bar.day ? null : bar.day)}
-                        />
-
-                        {/* Visible bar */}
-                        <rect 
-                          x={bar.x - 6} 
-                          y={bar.y} 
-                          width="12" 
-                          height={bar.height} 
-                          fill={isSelected ? "url(#activeBarGradient)" : isHovered ? "url(#activeBarGradient)" : "url(#barGradient)"} 
-                          rx="4"
-                          filter="url(#barShadow)"
-                          stroke={isSelected ? "#4FD1D9" : "none"}
-                          strokeWidth={isSelected ? 1.5 : 0}
-                          className="pointer-events-none transition-all duration-200"
-                        />
-                      </g>
+                  {/* Hotspots for interaction */}
+                  {svgChartBars.map((bar, idx) => {
+                    return (
+                      <rect
+                        key={`hotspot-${idx}`}
+                        x={bar.x - 8}
+                        y={20}
+                        width="16"
+                        height={140}
+                        fill="transparent"
+                        className="cursor-pointer"
+                        onMouseEnter={() => setHoveredBar(bar)}
+                        onMouseLeave={() => setHoveredBar(null)}
+                        onClick={() => setSelectedDay(prev => prev === bar.day ? null : bar.day)}
+                      />
                     );
                   })}
                 </svg>
@@ -508,25 +734,30 @@ export default function LaporanPage() {
                 {/* Hover Tooltip Overlay */}
                 {hoveredBar && (
                   <div 
-                    className="absolute z-20 bg-[#1e3a5f] text-white px-3 py-1.5 rounded-xl text-xs font-normal border border-[#4FD1D9] shadow-xl pointer-events-none transition-all duration-100 flex flex-col items-center animate-fade-in"
+                    className="absolute z-20 bg-[#1e3a5f]/95 backdrop-blur-md text-white px-3 py-2 rounded-xl text-xs font-bold border border-[#4FD1D9]/40 shadow-xl pointer-events-none transition-all duration-100 flex flex-col items-center animate-fade-in"
                     style={{ 
                       left: `${(hoveredBar.x / 600) * 100}%`, 
-                      top: `${((hoveredBar.y / 200) * 100) - 8}%`,
+                      top: `${((hoveredBar.y / 200) * 100) - 10}%`,
                       transform: 'translateX(-50%) translateY(-100%)'
                     }}
                   >
-                    <span className="text-[9px] text-slate-300 font-medium">Tanggal {hoveredBar.day}</span>
-                    <span>Rp {hoveredBar.amount.toLocaleString('id-ID')}</span>
+                    <span className="text-[9px] text-[#4FD1D9] font-black uppercase tracking-wider">Tanggal {hoveredBar.day}</span>
+                    <span className="font-extrabold text-[11px] mt-0.5">Rp {hoveredBar.amount.toLocaleString('id-ID')}</span>
                   </div>
                 )}
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       {/* Payment Methods Breakdowns will remain inside the grid container */}
 
         {/* Payment Methods Breakdowns */}
-        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-2xl shadow-slate-200/40 flex flex-col justify-between hover:shadow-2xl transition-all duration-300 group">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white p-6 rounded-3xl border border-slate-200 shadow-md shadow-slate-200/50 flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative group"
+        >
           <div>
             <h3 className="text-lg font-black text-[#1e3a5f] uppercase tracking-wide mb-1">Metode Pembayaran</h3>
             <p className="text-slate-400 text-xs mb-8 font-medium">Distribusi penyelesaian order laundry</p>
@@ -539,7 +770,12 @@ export default function LaporanPage() {
                   <span className="text-emerald-500">{cashRatio}%</span>
                 </div>
                 <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100 relative">
-                  <div className="h-full bg-emerald-400 rounded-full transition-all duration-1000 ease-out" style={{ width: `${cashRatio}%` }}></div>
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${cashRatio}%` }}
+                    transition={{ duration: 1.5, delay: 0.5 }}
+                    className="h-full bg-emerald-500 rounded-full"
+                  ></motion.div>
                 </div>
               </div>
 
@@ -550,7 +786,12 @@ export default function LaporanPage() {
                   <span className="text-[#4FD1D9]">{digitalRatio}%</span>
                 </div>
                 <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100 relative">
-                  <div className="h-full bg-[#4FD1D9] rounded-full transition-all duration-1000 ease-out" style={{ width: `${digitalRatio}%` }}></div>
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${digitalRatio}%` }}
+                    transition={{ duration: 1.5, delay: 0.5 }}
+                    className="h-full bg-[#4FD1D9] rounded-full"
+                  ></motion.div>
                 </div>
               </div>
             </div>
@@ -560,10 +801,15 @@ export default function LaporanPage() {
             <p className="text-[10px] font-black uppercase text-[#1e3a5f] tracking-wider mb-1">Total Pendapatan Terpilih</p>
             <p className="text-xl font-black text-[#1e3a5f]">Rp {monthlyRevenue.toLocaleString('id-ID')}</p>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="bg-white rounded-3xl border border-slate-200 shadow-md shadow-slate-200/50 overflow-hidden"
+      >
         {/* TOOLBAR */}
         <div className="p-6 border-b border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-4 bg-slate-50/50">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
@@ -594,26 +840,52 @@ export default function LaporanPage() {
                   placeholder="Cari Transaksi..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-white border-2 border-slate-200 rounded-xl text-xs focus:outline-none focus:border-[#4FD1D9] transition-all font-medium"
+                  className="w-full pl-9 pr-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-xs focus:outline-none focus:border-[#4FD1D9] transition-all font-medium text-[#1e3a5f]"
                 />
               </div>
 
               {/* Items per Page Dropdown */}
-              <div className="flex items-center gap-2 bg-white px-3 py-2 border-2 border-slate-200 rounded-xl">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tampilkan:</span>
-                <select 
-                  value={itemsPerPage} 
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRowsOpen(!isRowsOpen);
                   }}
-                  className="text-xs font-bold text-[#1e3a5f] focus:outline-none bg-transparent"
+                  className="flex items-center justify-between w-32 px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer transition-all duration-300 hover:border-[#4FD1D9]/60 hover:shadow-md focus:border-[#4FD1D9] focus:ring-2 focus:ring-[#4FD1D9]/20"
                 >
-                  <option value={5}>5 data</option>
-                  <option value={10}>10 data</option>
-                  <option value={20}>20 data</option>
-                  <option value={50}>50 data</option>
-                </select>
+                  <span>{itemsPerPage} Baris</span>
+                  <ChevronDown 
+                    size={14} 
+                    className={`text-[#1e3a5f] transition-transform duration-300 ${isRowsOpen ? 'rotate-180' : 'rotate-0'}`} 
+                  />
+                </button>
+                
+                {isRowsOpen && (
+                  <div className="absolute right-0 mt-2 w-32 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                    {[5, 10, 20, 50].map(num => {
+                      const isSelected = itemsPerPage === num;
+                      return (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => {
+                            setItemsPerPage(num);
+                            setCurrentPage(1);
+                            setIsRowsOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
+                            isSelected 
+                              ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                          }`}
+                        >
+                          <span>{num} Baris</span>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -780,7 +1052,7 @@ export default function LaporanPage() {
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
 
     {/* Laporan Print / PDF View (Only visible on print) */}

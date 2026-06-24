@@ -96,6 +96,13 @@ export default function DashboardPage() {
   // Filter Month & Year States (initialized to current date)
   const [filterMonth, setFilterMonth] = useState<number>(new Date().getMonth() + 1); // 1-12
   const [filterYear, setFilterYear] = useState<number>(new Date().getFullYear());
+  const [isMonthOpen, setIsMonthOpen] = useState(false);
+  const [isYearOpen, setIsYearOpen] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+
+  useEffect(() => {
+    setSelectedWeek(1);
+  }, [filterMonth, filterYear]);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -153,6 +160,16 @@ export default function DashboardPage() {
       setCurrentTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Click outside to close custom dropdown filters
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsMonthOpen(false);
+      setIsYearOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
   }, []);
 
   useEffect(() => {
@@ -622,11 +639,22 @@ export default function DashboardPage() {
     });
 
     if (processedServices.length === 0) {
-      setPopularServices([
-        { label: 'Cuci Kering Lipat', percent: 0, color: '#4FD1D9' },
-        { label: 'Cuci & Setrika', percent: 0, color: '#6366f1' },
-        { label: 'Setrika Saja', percent: 0, color: '#f59e0b' }
-      ]);
+      // Map all actual services from the database with 0%
+      const fallbackList = rawLayanan.map((lay: any, idx: number) => ({
+        label: lay.nama_layanan,
+        percent: 0,
+        color: lay.warna_layanan || fallbackColors[idx % fallbackColors.length]
+      }));
+      
+      if (fallbackList.length === 0) {
+        setPopularServices([
+          { label: 'Cuci Kering Lipat', percent: 0, color: '#4FD1D9' },
+          { label: 'Cuci & Setrika', percent: 0, color: '#6366f1' },
+          { label: 'Setrika Saja', percent: 0, color: '#f59e0b' }
+        ]);
+      } else {
+        setPopularServices(fallbackList);
+      }
     } else {
       setPopularServices(processedServices);
     }
@@ -641,20 +669,29 @@ export default function DashboardPage() {
     
     if (viewMode === 'weekly') {
       const daysLabel: string[] = [];
-      const dailyRevenue = Array(7).fill(0);
       const dates: Date[] = [];
-
-      // If filtering current month/year, default weekly view to end at today. Otherwise end at last day of filtered month.
-      const today = new Date();
-      let endDate = new Date(filterYear, filterMonth, 0); // Last day of chosen month
-      if (today.getMonth() + 1 === filterMonth && today.getFullYear() === filterYear) {
-        endDate = today;
+      
+      const daysInMonth = new Date(filterYear, filterMonth, 0).getDate();
+      
+      // Determine how many days in the selected week
+      let startDay = (selectedWeek - 1) * 7 + 1;
+      let endDay = selectedWeek * 7;
+      if (selectedWeek === 5) {
+        endDay = daysInMonth;
+      }
+      
+      // Fallback/validation if startDay is beyond actual days
+      if (startDay > daysInMonth) {
+        startDay = 22;
+        endDay = 28;
       }
 
-      for (let i = 6; i >= 0; i--) {
-        const idx = 6 - i;  // idx 0 = oldest, idx 6 = endDate
-        const d = new Date(endDate);
-        d.setDate(endDate.getDate() - i);
+      const numDays = endDay - startDay + 1;
+      const dailyRevenue = Array(numDays).fill(0);
+
+      for (let day = startDay; day <= endDay; day++) {
+        const idx = day - startDay;
+        const d = new Date(filterYear, filterMonth - 1, day);
         daysLabel.push(d.toLocaleDateString('id-ID', { weekday: 'short' }));
         dates.push(d);
         
@@ -673,10 +710,12 @@ export default function DashboardPage() {
       const maxRev = calcMaxRev(rawMax || 50000);
       setMaxRevenueValue(maxRev);
       const points = dailyRevenue.map((val, idx) => {
-        const x = 55 + (idx / 6) * 530;
+        const x = 55 + (idx / Math.max(numDays - 1, 1)) * 530;
         const y = 270 - (val / maxRev) * 240;
         const dateLabel = dates[idx].toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-        const labelText = dates[idx].toLocaleDateString('id-ID', { weekday: 'short' }).toUpperCase();
+        const dayName = dates[idx].toLocaleDateString('id-ID', { weekday: 'short' }).toUpperCase();
+        const dayNum = dates[idx].getDate();
+        const labelText = `${dayName} ${dayNum}`;
         return { x, y, amount: val, dateLabel, labelText };
       });
       setSvgPoints(points);
@@ -725,7 +764,7 @@ export default function DashboardPage() {
       setSvgPoints(points);
     }
 
-  }, [revenueData, viewMode, filterMonth, filterYear]);
+  }, [revenueData, viewMode, filterMonth, filterYear, selectedWeek]);
 
   // Generate SVG Path whenever points update
   useEffect(() => {
@@ -763,39 +802,94 @@ export default function DashboardPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* Month Selector Dropdown */}
-          <select 
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(Number(e.target.value))}
-            className="px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer focus:border-[#4FD1D9]"
-          >
-            {Array.from({ length: 12 }, (_, i) => {
-              const date = new Date(2026, i, 1);
-              const monthName = date.toLocaleDateString('id-ID', { month: 'long' });
-              return (
-                <option key={i + 1} value={i + 1}>
-                  {monthName}
-                </option>
-              );
-            })}
-          </select>
+          <div className="relative animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => {
+                setIsMonthOpen(!isMonthOpen);
+                setIsYearOpen(false);
+              }}
+              className="flex items-center justify-between w-44 px-4 py-2.5 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer transition-all duration-300 hover:border-[#4FD1D9]/60 hover:shadow-md hover:shadow-slate-100 focus:border-[#4FD1D9] focus:ring-2 focus:ring-[#4FD1D9]/20"
+            >
+              <span>{new Date(2026, filterMonth - 1, 1).toLocaleDateString('id-ID', { month: 'long' })}</span>
+              <ChevronDown 
+                size={14} 
+                className={`text-[#1e3a5f] transition-transform duration-300 ${isMonthOpen ? 'rotate-180' : 'rotate-0'}`} 
+              />
+            </button>
+            
+            {isMonthOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 max-h-60 overflow-y-auto transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                {Array.from({ length: 12 }, (_, i) => {
+                  const monthNum = i + 1;
+                  const date = new Date(2026, i, 1);
+                  const monthName = date.toLocaleDateString('id-ID', { month: 'long' });
+                  const isSelected = filterMonth === monthNum;
+                  return (
+                    <button
+                      key={monthNum}
+                      onClick={() => {
+                        setFilterMonth(monthNum);
+                        setIsMonthOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
+                        isSelected 
+                          ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                      }`}
+                    >
+                      <span>{monthName}</span>
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shadow-sm shadow-[#4FD1D9] shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Year Selector Dropdown */}
-          <select
-            value={filterYear}
-            onChange={(e) => setFilterYear(Number(e.target.value))}
-            className="px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer focus:border-[#4FD1D9]"
-          >
-            {[-2, -1, 0, 1].map((offset) => {
-              const yr = new Date().getFullYear() + offset;
-              return (
-                <option key={yr} value={yr}>
-                  Tahun {yr}
-                </option>
-              );
-            })}
-          </select>
+          <div className="relative animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => {
+                setIsYearOpen(!isYearOpen);
+                setIsMonthOpen(false);
+              }}
+              className="flex items-center justify-between w-36 px-4 py-2.5 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer transition-all duration-300 hover:border-[#4FD1D9]/60 hover:shadow-md hover:shadow-slate-100 focus:border-[#4FD1D9] focus:ring-2 focus:ring-[#4FD1D9]/20"
+            >
+              <span>Tahun {filterYear}</span>
+              <ChevronDown 
+                size={14} 
+                className={`text-[#1e3a5f] transition-transform duration-300 ${isYearOpen ? 'rotate-180' : 'rotate-0'}`} 
+              />
+            </button>
+            
+            {isYearOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                {[-2, -1, 0, 1].map((offset) => {
+                  const yr = new Date().getFullYear() + offset;
+                  const isSelected = filterYear === yr;
+                  return (
+                    <button
+                      key={yr}
+                      onClick={() => {
+                        setFilterYear(yr);
+                        setIsYearOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
+                        isSelected 
+                          ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                      }`}
+                    >
+                      <span>Tahun {yr}</span>
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-          <div className="px-3.5 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-[#1e3a5f] flex items-center gap-2">
+          <div className="px-3.5 py-2.5 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-bold text-[#1e3a5f] flex items-center gap-2">
             <Calendar size={14} className="text-[#4FD1D9]" />
             {currentTime ? (
               <span>
@@ -860,28 +954,53 @@ export default function DashboardPage() {
               Tren Pendapatan {viewMode === 'weekly' ? 'Harian' : 'Bulanan'}
             </h3>
             
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
-              <button 
-                onClick={() => setViewMode('weekly')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  viewMode === 'weekly' 
-                    ? 'bg-white text-[#1e3a5f] shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                Mingguan
-              </button>
-              <button 
-                onClick={() => setViewMode('monthly')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  viewMode === 'monthly' 
-                    ? 'bg-white text-[#1e3a5f] shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                Bulanan
-              </button>
+            <div className="flex items-center gap-2">
+              {/* Week Selector */}
+              {viewMode === 'weekly' && (
+                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                  {[1, 2, 3, 4, 5].map((wk) => {
+                    const daysInMonth = new Date(filterYear, filterMonth, 0).getDate();
+                    if (wk === 5 && daysInMonth < 29) return null;
+                    return (
+                      <button
+                        key={wk}
+                        onClick={() => setSelectedWeek(wk)}
+                        className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                          selectedWeek === wk
+                            ? 'bg-[#1e3a5f] text-white shadow-sm'
+                            : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                      >
+                        Mgg {wk}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                <button 
+                  onClick={() => setViewMode('weekly')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    viewMode === 'weekly' 
+                      ? 'bg-white text-[#1e3a5f] shadow-sm' 
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  Mingguan
+                </button>
+                <button 
+                  onClick={() => setViewMode('monthly')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    viewMode === 'monthly' 
+                      ? 'bg-white text-[#1e3a5f] shadow-sm' 
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  Bulanan
+                </button>
+              </div>
             </div>
           </div>
           

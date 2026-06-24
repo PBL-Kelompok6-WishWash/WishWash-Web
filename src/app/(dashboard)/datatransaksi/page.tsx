@@ -178,6 +178,8 @@ export default function DataTransaksiPage() {
   const [editStatusBayar, setEditStatusBayar] = useState("");
   const [editMetodeBayar, setEditMetodeBayar] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isRowsOpen, setIsRowsOpen] = useState(false);
+  const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'tgl_pesanan', direction: 'asc' });
 
   const handleSort = (key: string) => {
@@ -224,9 +226,18 @@ export default function DataTransaksiPage() {
       setIsLoading(false);
     }
   }
-
   useEffect(() => {
     loadOrders();
+  }, []);
+
+  // Click outside to close custom dropdown filters
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsRowsOpen(false);
+      setIsStatusFilterOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
   }, []);
 
   // Filter & Search Logic
@@ -409,46 +420,117 @@ export default function DataTransaksiPage() {
                 placeholder="Cari Kode Order, Nama Pelanggan..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#4FD1D9] transition-all font-medium"
+                className="w-full pl-11 pr-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-xs focus:outline-none focus:border-[#4FD1D9] transition-all font-medium text-[#1e3a5f]"
               />
             </div>
             
-            <select
-              value={itemsPerPage}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] text-sm font-bold cursor-pointer transition-colors appearance-none bg-white shrink-0"
-            >
-              {[5, 10, 25, 50].map(num => (
-                <option key={num} value={num}>{num} Baris</option>
-              ))}
-            </select>
+            {/* Custom itemsPerPage Selector */}
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRowsOpen(!isRowsOpen);
+                  setIsStatusFilterOpen(false);
+                }}
+                className="flex items-center justify-between w-32 px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer transition-all duration-300 hover:border-[#4FD1D9]/60 hover:shadow-md hover:shadow-slate-100 focus:border-[#4FD1D9] focus:ring-2 focus:ring-[#4FD1D9]/20"
+              >
+                <span>{itemsPerPage} Baris</span>
+                <ChevronDown 
+                  size={14} 
+                  className={`text-[#1e3a5f] transition-transform duration-300 ${isRowsOpen ? 'rotate-180' : 'rotate-0'}`} 
+                />
+              </button>
+              
+              {isRowsOpen && (
+                <div className="absolute left-0 mt-2 w-32 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                  {[5, 10, 25, 50].map(num => {
+                    const isSelected = itemsPerPage === num;
+                    return (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => {
+                          setItemsPerPage(num);
+                          setIsRowsOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
+                          isSelected 
+                            ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                        }`}
+                      >
+                        <span>{num} Baris</span>
+                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-3 w-full lg:w-auto">
              <div className="flex items-center gap-2 bg-white px-4 py-2.5 border-2 border-slate-200 rounded-xl">
                 <span className="text-xs font-bold text-slate-400">Filter Status:</span>
-                <select 
-                  value={statusFilter} 
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="text-xs font-bold text-slate-600 focus:outline-none bg-transparent"
-                >
-                  <option value="Semua">Semua</option>
-                  <option value="Menunggu Konfirmasi Pesanan">Menunggu Konfirmasi Pesanan</option>
-                  <option value="Menunggu Dijemput">Menunggu Dijemput</option>
-                  <option value="Sedang Dijemput">Sedang Dijemput</option>
-                  <option value="Menunggu Timbang">Menunggu Timbang</option>
-                  <option value="Proses Timbang">Proses Timbang</option>
-                  <option value="Proses Cuci">Proses Cuci</option>
-                  <option value="Proses Kering">Proses Kering</option>
-                  <option value="Proses Lipat">Proses Lipat</option>
-                  <option value="Proses Setrika">Proses Setrika</option>
-                  <option value="Menunggu Diantar">Menunggu Diantar</option>
-                  <option value="Menunggu Diambil">Menunggu Diambil</option>
-                  <option value="Sedang Diantar">Sedang Diantar</option>
-                  <option value="Selesai Diantar">Selesai Diantar</option>
-                  <option value="Selesai">Selesai</option>
-                  <option value="Dibatalkan">Dibatalkan</option>
-                </select>
+                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsStatusFilterOpen(!isStatusFilterOpen);
+                      setIsRowsOpen(false);
+                    }}
+                    className="flex items-center justify-between gap-2 px-3 py-1 bg-slate-50 rounded-lg border border-slate-200 text-xs font-bold text-[#1e3a5f] outline-none cursor-pointer transition-all duration-300 hover:border-[#4FD1D9]/60 hover:bg-white"
+                  >
+                    <span className="truncate max-w-[150px] sm:max-w-xs">{statusFilter}</span>
+                    <ChevronDown 
+                      size={14} 
+                      className={`text-[#1e3a5f] transition-transform duration-300 shrink-0 ${isStatusFilterOpen ? 'rotate-180' : 'rotate-0'}`} 
+                    />
+                  </button>
+                  
+                  {isStatusFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 max-h-60 overflow-y-auto transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                      {[
+                        "Semua",
+                        "Menunggu Konfirmasi Pesanan",
+                        "Menunggu Dijemput",
+                        "Sedang Dijemput",
+                        "Menunggu Timbang",
+                        "Proses Timbang",
+                        "Proses Cuci",
+                        "Proses Kering",
+                        "Proses Lipat",
+                        "Proses Setrika",
+                        "Menunggu Diantar",
+                        "Menunggu Diambil",
+                        "Sedang Diantar",
+                        "Selesai Diantar",
+                        "Selesai",
+                        "Dibatalkan"
+                      ].map(statusName => {
+                        const isSelected = statusFilter === statusName;
+                        return (
+                          <button
+                            key={statusName}
+                            type="button"
+                            onClick={() => {
+                              setStatusFilter(statusName);
+                              setIsStatusFilterOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
+                              isSelected 
+                                ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                            }`}
+                          >
+                            <span>{statusName}</span>
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
              </div>
           </div>
         </div>

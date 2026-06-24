@@ -18,6 +18,15 @@ export default function EditParfumPage() {
   const [isFetching, setIsFetching] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [isUsed, setIsUsed] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setIsStatusOpen(false);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
   
   const [formData, setFormData] = useState({
     nama_parfum: '',
@@ -160,18 +169,43 @@ export default function EditParfumPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-bold text-[#1e3a5f] ml-1">Status Parfum</label>
-              <div className="relative">
-                <select 
-                  value={formData.status_parfum}
-                  onChange={(e) => setFormData({...formData, status_parfum: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 focus:outline-none focus:border-[#4FD1D9] text-[#1e3a5f] font-medium transition-all appearance-none bg-white"
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsStatusOpen(!isStatusOpen);
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-white text-[#1e3a5f] font-medium flex items-center justify-between transition-all hover:border-[#4FD1D9]/60 focus:border-[#4FD1D9] focus:outline-none"
                 >
-                  <option value="Tersedia">Tersedia</option>
-                  <option value="Tidak Tersedia">Tidak Tersedia</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
-                  <ChevronDown size={18} />
-                </div>
+                  <span>{formData.status_parfum}</span>
+                  <ChevronDown size={18} className={`transition-transform duration-300 ${isStatusOpen ? 'rotate-180' : 'rotate-0'}`} />
+                </button>
+                
+                {isStatusOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
+                    {["Tersedia", "Tidak Tersedia"].map(val => {
+                      const isSelected = formData.status_parfum === val;
+                      return (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, status_parfum: val });
+                            setIsStatusOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-all duration-150 flex items-center justify-between ${
+                            isSelected 
+                              ? 'bg-[#4FD1D9]/10 text-[#1e3a5f] font-extrabold' 
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-[#1e3a5f]'
+                          }`}
+                        >
+                          <span>{val}</span>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#4FD1D9] shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
