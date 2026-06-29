@@ -1059,7 +1059,7 @@ export default function DataTransaksiPage() {
                       <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em]">Riwayat Status & Pelacakan</h4>
                     </div>
                     <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-100 p-4 rounded-2xl shadow-sm">
-                      <div className="overflow-y-auto max-h-[280px] custom-scrollbar pr-1">
+                      <div>
                         {(() => {
                           const history = selectedOrder.RiwayatStatusDetail || [];
                           const sorted = [...history].sort((a, b) => {
@@ -1067,25 +1067,175 @@ export default function DataTransaksiPage() {
                             const idB = (b as any).id_riwayat_status_detail || 0;
                             return idA - idB;
                           });
-                          if (sorted.length === 0) {
-                            return <p className="text-slate-400 text-xs italic text-center py-4">Belum ada riwayat status.</p>;
+
+                          // Resolve current status name
+                          const currentStatus = getOrderStatus(selectedOrder);
+                          const lowerCurrent = currentStatus.toLowerCase().trim();
+                          const isCancelled = lowerCurrent.includes('batal') || lowerCurrent.includes('cancel') || lowerCurrent.includes('tolak') || lowerCurrent.includes('reject');
+
+                          // Build full list of reference statuses
+                          const rawRefList = selectedOrder.Layanan?.referensi_status || selectedOrder.Layanan?.referensiStatus || [];
+                          const tempRefList = [...rawRefList].map(e => ({ ...e }));
+                          tempRefList.sort((a, b) => (a.urutan_tahap || 0) - (b.urutan_tahap || 0));
+
+                          let refStatuses = [{ nama_status: 'Pesanan Diterima', urutan_tahap: 1 }];
+                          for (const item of tempRefList) {
+                            const name = item.nama_status || '';
+                            const nameLower = name.toLowerCase();
+                            if (
+                              nameLower.includes('diterima') ||
+                              nameLower.includes('received') ||
+                              nameLower.includes('batal') ||
+                              nameLower.includes('cancel') ||
+                              nameLower.includes('tolak') ||
+                              nameLower.includes('reject')
+                            ) {
+                              continue;
+                            }
+                            refStatuses.push({
+                              nama_status: name,
+                              urutan_tahap: refStatuses.length + 1
+                            });
                           }
+
+                          // Fallback list of statuses if empty or single
+                          if (refStatuses.length <= 1) {
+                            refStatuses = [
+                              { nama_status: 'Pesanan Diterima', urutan_tahap: 1 },
+                              { nama_status: 'Penjemputan', urutan_tahap: 2 },
+                              { nama_status: 'Proses Timbang', urutan_tahap: 3 },
+                            { nama_status: 'Proses Cuci', urutan_tahap: 4 },
+                              { nama_status: 'Proses Kering', urutan_tahap: 5 },
+                              { nama_status: 'Proses Lipat', urutan_tahap: 6 },
+                              { nama_status: 'Siap Diantar', urutan_tahap: 7 },
+                              { nama_status: 'Selesai', urutan_tahap: 8 }
+                            ];
+                          }
+
+                          // If no pickup address, remove jemput/pickup status
+                          const hasPickup = selectedOrder.id_alamat_pengambilan && selectedOrder.id_alamat_pengambilan !== 0;
+                          if (!hasPickup) {
+                            refStatuses = refStatuses.filter(item => {
+                              const name = (item.nama_status || '').toLowerCase();
+                              return !name.includes('jemput') && !name.includes('pickup') && !name.includes('penjemputan');
+                            });
+                          }
+
+                          // Rename the last stage to 'Dibatalkan' if cancelled
+                          if (isCancelled && refStatuses.length > 0) {
+                            refStatuses[refStatuses.length - 1] = {
+                              ...refStatuses[refStatuses.length - 1],
+                              nama_status: 'Dibatalkan'
+                            };
+                          }
+
+                          // Determine active index
+                          let activeIdx = 0;
+                          for (let i = 0; i < refStatuses.length; i++) {
+                            const refName = (refStatuses[i].nama_status || '').toLowerCase().trim();
+                            if (
+                              refName === lowerCurrent ||
+                              (lowerCurrent.includes('diterima') && refName.includes('diterima')) ||
+                              (lowerCurrent.includes('jemput') && refName.includes('jemput')) ||
+                              (lowerCurrent.includes('timbang') && refName.includes('timbang')) ||
+                              (lowerCurrent.includes('cuci') && refName.includes('cuci')) ||
+                              (lowerCurrent.includes('kering') && refName.includes('kering')) ||
+                              (lowerCurrent.includes('lipat') && refName.includes('lipat')) ||
+                              (lowerCurrent.includes('setrika') && refName.includes('setrika')) ||
+                              (lowerCurrent.includes('antar') && refName.includes('antar')) ||
+                              (lowerCurrent.includes('selesai') && refName.includes('selesai')) ||
+                              (lowerCurrent.includes('batal') && refName.includes('batal')) ||
+                              (lowerCurrent.includes('tolak') && refName.includes('tolak')) ||
+                              (lowerCurrent.includes('dibatalkan') && refName.includes('dibatalkan'))
+                            ) {
+                              activeIdx = i;
+                              break;
+                            }
+                          }
+
+                          const isSelesai = lowerCurrent.includes('selesai') || lowerCurrent.includes('completed') || lowerCurrent.includes('success');
+
                           return (
-                            <div className="relative pl-5 ml-2 space-y-4 border-l-2 border-dashed border-slate-200">
-                              {sorted.map((step, idx) => {
-                                const refStatus = step.ReferensiStatus || step.referensiStatus || step.referensi_status;
-                                const statusName = refStatus?.nama_status || "Status tidak dikenal";
-                                const isLast = idx === sorted.length - 1;
-                                const timeStr = new Date(step.waktu_update).toLocaleString('id-ID', {
-                                  day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                            <div className="relative pl-6 ml-1 space-y-5">
+                              {refStatuses.map((item, idx) => {
+                                const statusName = item.nama_status;
+                                const isDone = isCancelled ? false : (idx < activeIdx || isSelesai);
+                                const isCurrent = isCancelled ? false : (idx === activeIdx && !isSelesai);
+                                const isLast = idx === refStatuses.length - 1;
+
+                                // Find matching history item to display date and time
+                                let timeStr = "";
+                                const matchingHistory = sorted.find((h) => {
+                                  const refStatus = h.ReferensiStatus || h.referensiStatus || h.referensi_status;
+                                  const hName = (refStatus?.nama_status || h.nama_status || "").toLowerCase().trim();
+                                  const stageLower = statusName.toLowerCase().trim();
+                                  return hName === stageLower ||
+                                    (stageLower.includes('diterima') && hName.includes('diterima')) ||
+                                    (stageLower.includes('jemput') && hName.includes('jemput')) ||
+                                    (stageLower.includes('timbang') && hName.includes('timbang')) ||
+                                    (stageLower.includes('cuci') && hName.includes('cuci')) ||
+                                    (stageLower.includes('kering') && hName.includes('kering')) ||
+                                    (stageLower.includes('lipat') && hName.includes('lipat')) ||
+                                    (stageLower.includes('setrika') && hName.includes('setrika')) ||
+                                    (stageLower.includes('antar') && hName.includes('antar')) ||
+                                    (stageLower.includes('selesai') && hName.includes('selesai')) ||
+                                    (stageLower.includes('batal') && hName.includes('batal')) ||
+                                    (stageLower.includes('tolak') && hName.includes('tolak')) ||
+                                    (stageLower.includes('dibatalkan') && hName.includes('dibatalkan'));
                                 });
+
+                                if (matchingHistory) {
+                                  timeStr = new Date(matchingHistory.waktu_update).toLocaleString('id-ID', {
+                                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                  });
+                                }
+
+                                // CSS styles based on states
+                                let bulletClass = "";
+                                let textClass = "";
+                                if (isCancelled) {
+                                  bulletClass = "bg-rose-500 border-rose-500 text-white shadow-[0_0_6px_rgba(244,63,94,0.4)]";
+                                  textClass = "text-rose-700 font-bold";
+                                } else if (isDone) {
+                                  bulletClass = "bg-[#4FD1D9] border-[#4FD1D9] text-white";
+                                  textClass = "text-[#1e3a5f] font-bold";
+                                } else if (isCurrent) {
+                                  bulletClass = "bg-white border-2 border-[#4FD1D9] text-[#4FD1D9] shadow-[0_0_6px_rgba(79,209,217,0.4)]";
+                                  textClass = "text-[#1e3a5f] font-black";
+                                } else {
+                                  bulletClass = "bg-white border-2 border-slate-200 text-slate-300";
+                                  textClass = "text-slate-400 font-medium";
+                                }
+
                                 return (
-                                  <div key={idx} className="relative">
-                                    <div className={`absolute -left-[27px] top-1 w-4 h-4 rounded-full flex items-center justify-center border-2 ${isLast ? 'bg-[#4FD1D9] border-[#4FD1D9] shadow-[0_0_6px_rgba(79,209,217,0.5)]' : 'bg-white border-slate-300'}`}>
-                                      {isLast && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                                  <div key={idx} className="relative flex items-start gap-3">
+                                    {/* Vertical line segment below bullet */}
+                                    {!isLast && (
+                                      <div
+                                        className={`absolute left-[-15px] top-4 bottom-[-32px] w-[2px] ${
+                                          isCancelled
+                                            ? 'bg-rose-300'
+                                            : (isDone ? 'bg-[#4FD1D9]' : 'bg-slate-200')
+                                        }`}
+                                      />
+                                    )}
+
+                                    {/* Bullet circle */}
+                                    <div className={`absolute -left-[24px] top-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${bulletClass}`}>
+                                      {isCancelled ? (
+                                        <X size={10} strokeWidth={3} />
+                                      ) : isDone ? (
+                                        <svg className="w-2.5 h-2.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="4">
+                                          <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                      ) : isCurrent ? (
+                                        <div className="w-1.5 h-1.5 bg-[#4FD1D9] rounded-full animate-ping" />
+                                      ) : null}
                                     </div>
-                                    <p className={`font-bold text-sm ${isLast ? 'text-[#1e3a5f]' : 'text-slate-500'}`}>{statusName}</p>
-                                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">{timeStr}</p>
+                                    <div>
+                                      <p className={`text-xs ${textClass}`}>{statusName}</p>
+                                      {timeStr && <p className="text-[9px] text-slate-400 font-medium mt-0.5">{timeStr}</p>}
+                                    </div>
                                   </div>
                                 );
                               })}
