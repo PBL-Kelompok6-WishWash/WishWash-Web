@@ -62,4 +62,18 @@ export const notifikasiService = {
       return { success: false };
     }
   },
+
+  deleteAll: async (): Promise<{ success: boolean }> => {
+    try {
+      const res = await fetch(`${BASE_URL}/delete-all`, { method: "DELETE", headers: getAuthHeaders() });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false };
+      }
+      return { success: true };
+    } catch (error) {
+      console.error("Error in deleteAll:", error);
+      return { success: false };
+    }
+  },
 };

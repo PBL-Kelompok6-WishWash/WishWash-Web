@@ -432,7 +432,7 @@ export default function EditLayananPage() {
                   
                   {!isUsed && isJenisSatuanOpen && (
                     <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 z-50 transition-all duration-200 origin-top animate-in fade-in slide-in-from-top-2">
-                      {["Kg", "Pcs", "Meter", "Pasang"].map(val => {
+                      {["Kg", "Pcs"].map(val => {
                         const isSelected = formData.jenis_satuan === val;
                         return (
                           <button

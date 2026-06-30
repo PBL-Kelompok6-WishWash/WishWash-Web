@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Bell, Search, CheckCheck, ShoppingBag, CreditCard, Rocket, UserPlus, Info, User, Truck, MapPin, Calendar, Clock, Smartphone, Store } from 'lucide-react';
+import { Bell, Search, CheckCheck, ShoppingBag, CreditCard, Rocket, UserPlus, Info, User, Truck, MapPin, Calendar, Clock, Smartphone, Store, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { notifikasiService, NotifikasiDTO } from '../../../services/notifikasiService';
 import { orderService } from '../../../services/orderService';
@@ -101,6 +101,23 @@ export default function NotifikasiPage() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!window.confirm("Apakah Anda yakin ingin menghapus semua notifikasi?")) {
+      return;
+    }
+    try {
+      const res = await notifikasiService.deleteAll();
+      if (res.success) {
+        setNotifications([]);
+        setSelectedNotif(null);
+      } else {
+        alert("Gagal menghapus semua notifikasi");
+      }
+    } catch (error) {
+      console.error("Gagal menghapus semua notifikasi:", error);
+    }
+  };
+
   const getNotifIcon = (judul: string) => {
     const title = judul.toLowerCase();
     if (title.includes('pesanan baru') || title.includes('masuk')) {
@@ -193,15 +210,26 @@ export default function NotifikasiPage() {
           <h1 className="text-2xl sm:text-3xl font-black text-[#1e3a5f] tracking-tight">Pusat Notifikasi</h1>
           <p className="text-slate-500 text-sm mt-1">Pantau dan kelola semua riwayat aktivitas operasional laundry Anda.</p>
         </div>
-        {unreadCount > 0 && (
-          <button 
-            onClick={handleMarkAllAsRead}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4FD1D9]/10 text-[#259b9f] hover:bg-[#4FD1D9]/20 transition-all font-bold text-sm rounded-xl"
-          >
-            <CheckCheck size={18} />
-            Tandai Semua Dibaca
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {unreadCount > 0 && (
+            <button 
+              onClick={handleMarkAllAsRead}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4FD1D9]/10 text-[#259b9f] hover:bg-[#4FD1D9]/20 transition-all font-bold text-sm rounded-xl"
+            >
+              <CheckCheck size={18} />
+              Tandai Semua Dibaca
+            </button>
+          )}
+          {notifications.length > 0 && (
+            <button 
+              onClick={handleDeleteAll}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all font-bold text-sm rounded-xl"
+            >
+              <Trash2 size={18} />
+              Hapus Semua
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Area Kontrol (Search & Tabs) */}
