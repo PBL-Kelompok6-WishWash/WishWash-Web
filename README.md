@@ -1,169 +1,103 @@
-<div align="center">
-  
-# 🧺 WishWash
-**Laundry Management System**
+<p align="center">
+  <img src="public/logo.png" alt="WishWash Logo" width="120" />
+</p>
 
-[![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org/)
-[![Flutter](https://img.shields.io/badge/Flutter-Mobile-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev/)
-[![Next.js](https://img.shields.io/badge/Next.js-Web-000000?style=flat&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+# 👑 WishWash Web Dashboard
+**Next.js Admin Dashboard for WishWash Laundry Management System**
 
-WishWash adalah solusi manajemen laundry terintegrasi end-to-end yang dirancang untuk mendigitalisasi dan mengotomatisasi operasional laundry. Sistem ini mencakup pelacakan status cucian secara real-time, manajemen pesanan, manajemen operasional, dan komunikasi terpadu.
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescript.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#-docker-deployment)
 
-</div>
-
----
-
-## ✨ Fitur Utama
-
-Aplikasi ini dibagi menjadi 3 antarmuka utama yang disesuaikan untuk setiap peran pengguna:
-
-### 👑 Admin Dashboard (Web)
-*   **Manajemen Master Data**: Kelola pelanggan, karyawan/kurir, layanan, paket, parfum, dan metode pembayaran.
-*   **Manajemen Promo**: Buat dan atur kode promo diskon untuk pelanggan.
-*   **Pantauan Transaksi**: Lihat semua pesanan masuk, proses, hingga selesai secara real-time.
-*   **Laporan & Analitik**: (Akan datang) Rekapitulasi pendapatan dan performa laundry.
-
-### 📱 Customer App (Mobile)
-*   **Pemesanan Mudah**: Pesan layanan laundry dengan pilihan paket durasi dan preferensi parfum.
-*   **Manajemen Alamat**: Simpan berbagai alamat (rumah, kos, kantor) dengan satu alamat utama (Primary).
-*   **Live Tracking**: Lacak status pesanan secara real-time (Mulai dari *Menunggu Penjemputan* hingga *Selesai*).
-*   **Chat Real-time**: Komunikasi langsung dengan kurir yang bertugas menjemput/mengantar cucian.
-
-### 🛵 Courier/Karyawan App (Mobile)
-*   **Manajemen Tugas**: Terima tugas penjemputan dan pengantaran cucian.
-*   **Update Status**: Perbarui status cucian ke database hanya dengan beberapa tap.
-*   **Komunikasi Pelanggan**: Chat langsung dengan pelanggan untuk konfirmasi lokasi atau jadwal.
+Repositori ini berisi kode sumber untuk **Web Admin Dashboard** WishWash. Web ini dirancang khusus untuk mempermudah pemilik/pengelola laundry (Admin) dalam memantau operasional harian, melacak transaksi real-time, mengelola master data pengguna, serta menganalisis laporan omset bulanan.
 
 ---
 
-## 🚀 Tech Stack & Arsitektur Sistem
+## 🚀 Fitur Utama Web Dashboard
 
-Proyek ini dibangun menggunakan arsitektur modern berbasis micro-services dan pemisahan *frontend-backend* yang bersih:
-
-| Komponen | Teknologi | Deskripsi |
-| :--- | :--- | :--- |
-| **Backend API** | Go (Golang), Gin, GORM | RESTful API berkinerja tinggi, dilengkapi autentikasi JWT Role-based. |
-| **Database** | PostgreSQL 18 | Sistem manajemen basis data relasional untuk integritas data. |
-| **Web Frontend** | Next.js, React, Tailwind CSS | Dasbor admin yang responsif, cepat, dan modern. |
-| **Mobile Frontend** | Flutter, Dart | Aplikasi lintas platform (Android/iOS) dengan UI/UX yang dinamis. |
+*   **Manajemen Transaksi Terpadu**: Pantau pesanan masuk secara real-time, perbarui status pembayaran, serta tinjau riwayat pelacakan pesanan secara visual (*interactive stepper*).
+*   **Manajemen Master Data (CRUD)**: Kelola data pelanggan, kurir/karyawan, ragam layanan laundry, paket durasi, jenis parfum, dan metode pembayaran.
+*   **Pemberitahuan & Notifikasi**: Menerima notifikasi langsung saat ada pesanan baru masuk dan fitur "Hapus Semua" untuk membersihkan riwayat pesan pemberitahuan.
+*   **Analitik & Laporan Pendapatan**: Tampilan bagan statistik interaktif berbasis SVG untuk memantau omset bulanan, transaksi harian, hari puncak pemesanan, dan transaksi terlaris.
+*   **Manajemen Promo**: Buat voucher diskon dengan batas minimal pemesanan dan potongan harga dinamis untuk dipasang pada aplikasi pelanggan.
 
 ---
 
-## 📂 Struktur Folder Proyek
+## 📂 Struktur Folder Web
 
 ```text
-WISHWASH-APP/
-├── assets/              # Aset gambar/icon global
-├── backend/             # Source code API (Golang)
-│   ├── cmd/             # Entry point aplikasi (main.go)
-│   ├── config/          # Konfigurasi Database & Environment
-│   ├── controller/      # Handler & Logika bisnis API
-│   ├── middleware/      # Keamanan (JWT Auth, Role checking)
-│   ├── model/           # Definisi skema tabel (GORM Structs)
-│   ├── repository/      # Fungsi query interaksi ke database
-│   ├── route/           # Pengaturan endpoint REST API
-│   └── seeder/          # Data awal (dummy data) database
-├── mobile/              # Source code App Customer & Kurir (Flutter)
-│   ├── lib/             # Kodingan utama antarmuka & logika Dart
-│   │   ├── screens/     # Tampilan halaman per peran (admin/pelanggan/karyawan)
-│   │   ├── services/    # Penghubung API ke backend
-│   │   └── widgets/     # Komponen UI yang dapat digunakan ulang
-│   └── pubspec.yaml     # Dependency Manager Flutter
-├── web/                 # Source code Dashboard Admin (Next.js)
-│   ├── src/app/         # Next.js App Router (Halaman & Layout)
-│   ├── src/components/  # Komponen React (Sidebar, Header, dll)
-│   ├── src/services/    # Penghubung API ke backend
-│   └── package.json     # Dependency Manager Node.js
-├── api_documentation.md # Dokumentasi Lengkap Endpoint API
-└── README.md            # Dokumentasi utama proyek
+WishWash-Web/
+├── public/              # Aset statis (gambar, logo, ikon)
+├── src/
+│   ├── app/             # Routing Next.js App Router (Dashboard Pages & Layouts)
+│   ├── components/      # Komponen UI modular (Sidebar, Header, Alert, Dialog)
+│   ├── services/        # Service modul penghubung API ke Backend (Axios Client)
+│   └── utils/           # Fungsi pembantu (format uang, helper gambar, formatter)
+├── next.config.ts       # Konfigurasi Next.js Compiler
+├── tsconfig.json        # Konfigurasi Aturan TypeScript
+├── package.json         # Daftar dependensi & script Node.js
+└── README.md            # Dokumentasi utama repositori Web
 ```
 
 ---
 
 ## 🛠️ Panduan Memulai (Quick Start)
 
-### 1. Persyaratan Sistem
-Pastikan perangkat Anda sudah terinstal perangkat lunak berikut:
-*   [Golang](https://golang.org/dl/) (v1.20+)
-*   [PostgreSQL](https://www.postgresql.org/download/)
-*   [Node.js & npm](https://nodejs.org/)
-*   [Flutter SDK](https://docs.flutter.dev/get-started/install)
+### 1. Prasyarat Sistem
+*   **Node.js** (Versi 18 ke atas)
+*   **npm** atau **yarn**
 
-### 2. Setup Database
-1. Buat database baru bernama `wishwash_db` di PostgreSQL Anda.
-2. Pastikan database berjalan (default port `5433` atau sesuaikan dengan pengaturan Anda).
-
-### 3. Konfigurasi Environment (`.env`)
-Buat file bernama `.env` di **root folder** proyek (`WishWash-App/.env`) dan isi dengan konfigurasi berikut:
+### 2. Konfigurasi Environment (`.env.local`)
+Buat berkas bernama `.env.local` di dalam folder root `WishWash-Web/` dan isi konfigurasinya:
 ```env
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5433
-DB_USER=postgres
-DB_PASSWORD=password_database_anda
-DB_NAME=wishwash_db
-
-# Backend API URL (Digunakan oleh Web & Mobile)
-NEXT_PUBLIC_API_URL=http://localhost:8080
+# Alamat server backend API Go (WishWash-Backend)
+NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
 ```
-> ⚠️ **Penting**: Jangan pernah mem-push file `.env` yang berisi kredensial asli ke GitHub!
 
-### 4. Menjalankan Backend (API)
+### 3. Instalasi Dependensi & Menjalankan Web Dev Server
+Buka terminal di folder root web, lalu jalankan perintah:
 ```bash
-cd backend
-go mod tidy
-go run cmd/main.go
-```
-*Server akan berjalan di `http://localhost:8080` dan otomatis melakukan migrasi tabel database.*
-
-### 5. Menjalankan Web (Dashboard Admin)
-```bash
-cd web
+# Menginstal modul npm yang dibutuhkan
 npm install
+
+# Menjalankan server dalam mode development
 npm run dev
 ```
-*Buka browser dan akses `http://localhost:3000`.*
+*Buka browser Anda dan akses halaman admin di `http://localhost:3000`.*
 
-### 6. Menjalankan Mobile (Aplikasi)
+---
+
+## 📦 Build untuk Production
+
+Untuk melakukan build kompilasi siap rilis (produksi):
 ```bash
-cd mobile
-flutter pub get
-flutter run
+# Melakukan build kompilasi Next.js
+npm run build
+
+# Menjalankan server Next.js siap rilis
+npm run start
 ```
 
 ---
 
-## 📖 Dokumentasi API
-Untuk melihat dokumentasi lengkap mengenai seluruh endpoint, metode request, dan contoh response dari sistem backend WishWash, silakan merujuk ke file:
-👉 **[Dokumentasi API Lengkap (api_documentation.md)](api_documentation.md)**
+## 🐳 Docker Deployment
 
----
+Repositori ini juga mendukung deployment menggunakan Docker:
 
-## 🔄 Panduan Kerja Tim (Git Workflow)
-
-Agar kolaborasi kode berjalan rapi dan tidak terjadi konflik, ikuti aturan dasar berikut:
-
-1. **Selalu Tarik Pembaruan Terbaru**:
-   ```bash
-   git pull origin main
-   ```
-2. **Simpan dan Kirim Perubahan dengan Pesan yang Jelas**:
-   Gunakan format standar untuk *commit message*, contohnya:
-   *   `feat: [nama_fitur] deskripsi` (Untuk fitur baru)
-   *   `fix: [nama_fitur] deskripsi` (Untuk perbaikan bug)
-   *   `ui: update tampilan dashboard` (Untuk perubahan desain)
-   
-   ```bash
-   git add .
-   git commit -m "feat: menambah endpoint tracking status"
-   git push origin main
-   ```
+1.  **Build Docker Image**:
+    ```bash
+    docker build -t wishwash-web .
+    ```
+2.  **Run Docker Container**:
+    ```bash
+    docker run -p 3000:3000 wishwash-web
+    ```
 
 ---
 
 <div align="center">
-  <b>Dikembangkan dengan ❤️ oleh Tim PBL Kelompok 6</b><br>
-  Program Studi Teknologi Rekayasa Komputer<br>
-  Politeknik Negeri Semarang (POLINES)
+  <b>PBL Kelompok 6 - WishWash Laundry</b><br>
+  Teknologi Rekayasa Komputer, Politeknik Negeri Semarang
 </div>
