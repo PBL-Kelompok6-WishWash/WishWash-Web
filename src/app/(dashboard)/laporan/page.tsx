@@ -292,7 +292,7 @@ export default function LaporanPage() {
   const maxSalesDay = React.useMemo(() => {
     if (!svgChartBars || svgChartBars.length === 0) return null;
     let maxVal = -1;
-    let bestDay = null;
+    let bestDay: any = null;
     svgChartBars.forEach(b => {
       if (b.amount > maxVal) {
         maxVal = b.amount;

@@ -26,6 +26,8 @@ interface Transaksi {
   harga_saat_ini?: number;
   is_courier_on_way?: boolean;
   is_courier_arrived?: boolean;
+  id_alamat_pengambilan?: number;
+  id_alamat_penyerahan?: number;
   Pelanggan: {
     nama_lengkap: string;
     no_telp: string;
@@ -34,6 +36,16 @@ interface Transaksi {
   Layanan: {
     nama_layanan: string;
     harga: number;
+    referensi_status?: Array<{
+      id_referensi_status_layanan: number;
+      nama_status: string;
+      urutan_tahap: number;
+    }>;
+    referensiStatus?: Array<{
+      id_referensi_status_layanan: number;
+      nama_status: string;
+      urutan_tahap: number;
+    }>;
   };
   PaketLayanan?: {
     nama_paket: string;
@@ -1167,7 +1179,7 @@ export default function DataTransaksiPage() {
                                 let timeStr = "";
                                 const matchingHistory = sorted.find((h) => {
                                   const refStatus = h.ReferensiStatus || h.referensiStatus || h.referensi_status;
-                                  const hName = (refStatus?.nama_status || h.nama_status || "").toLowerCase().trim();
+                                  const hName = (refStatus?.nama_status || (h as any).nama_status || "").toLowerCase().trim();
                                   const stageLower = statusName.toLowerCase().trim();
                                   return hName === stageLower ||
                                     (stageLower.includes('diterima') && hName.includes('diterima')) ||
